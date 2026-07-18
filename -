@@ -1,0 +1,57 @@
+    def build_station(self):
+        steps = [
+            {'name': 'weather', 'tool': 'set_weather', 'args': {'weather': 'rainy'}},
+            {'name': 'waiting_room', 'tool': 'create_entity', 'args': {
+                'semantic_type': 'building', 'name': 'Waiting Room',
+                'position': {'x': 500, 'y': 200}, 'size': {'width': 200, 'height': 180},
+                'visual': {'color': '#5a4a3a', 'shape': 'rectangle'}}},
+            {'name': 'roof', 'tool': 'create_entity', 'args': {
+                'semantic_type': 'roof', 'name': 'Eaves',
+                'position': {'x': 450, 'y': 100}, 'size': {'width': 300, 'height': 20}}},
+            {'name': 'door', 'tool': 'create_entity', 'args': {
+                'semantic_type': 'locked_door', 'name': 'Iron Door',
+                'state': {'locked': True, 'open': False},
+                'capabilities': ['open', 'lock', 'unlock', 'interact'],
+                'requires': {'item': 'station_key'},
+                'position': {'x': 500, 'y': 300}, 'size': {'width': 64, 'height': 16},
+                'visual': {'color': '#8a7a6a', 'shape': 'rectangle'}}},
+            {'name': 'player', 'tool': 'create_entity', 'args': {
+                'semantic_type': 'player', 'name': 'Traveler',
+                'state': {'inventory': [], 'health': 100},
+                'capabilities': ['move', 'interact', 'use'],
+                'position': {'x': 200, 'y': 400}, 'size': {'width': 28, 'height': 32},
+                'visual': {'color': '#4488cc', 'shape': 'rectangle'}}},
+            {'name': 'key', 'tool': 'create_entity', 'args': {
+                'semantic_type': 'key_item', 'name': 'Station Key',
+                'state': {'picked_up': False},
+                'position': {'x': 100, 'y': 150}, 'size': {'width': 16, 'height': 16},
+                'visual': {'color': '#ccaa44', 'shape': 'circle'}, 'tags': ['key']}},
+            {'name': 'npc', 'tool': 'create_entity', 'args': {
+                'semantic_type': 'npc', 'name': 'Vagrant',
+                'state': {'mood': 'anxious'},
+                'position': {'x': 350, 'y': 380}, 'size': {'width': 28, 'height': 32},
+                'visual': {'color': '#cc8844', 'shape': 'rectangle'}}},
+        ]
+        # Run all steps and track entity IDs
+        entity_map = {}
+        results = []
+        for s in steps:
+            r = self.step(s['name'], s['tool'], s['args'], critical=True)
+            results.append(r)
+            # Extract entity_id if present
+            if r.get('data') and isinstance(r['data'], dict) and 'entity_id' in r['data']:
+                entity_map[s['name']] = r['data']['entity_id']
+            elif r.get('data') and isinstance(r['data'], str):
+                pass
+            if not r['success']:
+                return results
+        # Post-creation: set player, behavior
+        if 'player' in entity_map:
+            self.step('set_player', 'set_player', {'entity_id': entity_map['player']})
+        if 'npc' in entity_map:
+            self.step('behavior', 'set_behavior', {
+                'entity_id': entity_map['npc'], 'behavior_type': 'goal_oriented',
+                'goals': [{'condition': 'weather.rain == true', 'priority': 10,
+                          'action': 'seek_shelter', 'description': 'Find shelter'}],
+                'fallback': 'wander_near_station', 'speed': 50.0})
+        return results

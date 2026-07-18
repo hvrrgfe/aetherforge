@@ -1,0 +1,14 @@
+﻿# AetherForge 核心依赖
+pymunk>=6.5.0
+pygame>=2.0.0
+flask>=2.0.0
+mcp>=1.0.0
+psutil>=5.0.0
+
+# AI 图片生成（可选）
+# torch
+# diffusers
+# transformers
+# accelerate
+
+# AI 音乐生成（可选，见 README 中 "AI 音乐生成" 章节）

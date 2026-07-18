@@ -1,0 +1,51 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.egg-info/
+dist/
+build/
+*.egg
+
+# AetherForge
+projects/
+assets/generated/
+models/*.safetensors
+models/*.bin
+models/*.pth
+
+# Config
+.aetherforge/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Temp
+temp_*.py
+
+# Temp/test files
+argv_test.txt
+code_test.txt
+gen.ps1
+qq_test.txt
+test_*.txt
+test_*.py
+verify.py
+tools/GOOD.py
+tools/audit.py
+tools/b64*.py
+tools/builder.py
+tools/fix_mcp.py
+tools/gen*.py
+tools/generate*.py
+tools/rb.py
+tools/write_all.py
+tools/writer.py
+temp_*.py
+temp_*.md
