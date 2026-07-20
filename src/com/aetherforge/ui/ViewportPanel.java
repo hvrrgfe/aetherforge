@@ -30,6 +30,8 @@ public class ViewportPanel extends JPanel implements SceneListener {
     private static final long FADE_MS = 200;
     public enum ToolMode { SELECT, MOVE, SCALE }
     private ToolMode toolMode = ToolMode.SELECT;
+    public void setToolMode(ToolMode mode) { this.toolMode = mode; }
+    public ToolMode getToolMode() { return toolMode; }
     private boolean snapEnabled = true;
     private Timer animTimer;
 
@@ -58,6 +60,46 @@ public class ViewportPanel extends JPanel implements SceneListener {
 
         scene.addListener(this);
 
+        JPopupMenu vpPopup = new JPopupMenu();
+        vpPopup.setBackground(Colors.bgRaised());
+        vpPopup.setBorder(BorderFactory.createLineBorder(Colors.borderLine()));
+        JMenuItem createItem = new JMenuItem();
+        createItem.setForeground(Colors.textPrimary());
+        createItem.setBackground(Colors.bgRaised());
+        createItem.addActionListener(e -> {
+            scene.executeCommand(new com.aetherforge.model.CreateEntityCommand(scene, "entity", com.aetherforge.util.I18n.get("entity.new")));
+        });
+        vpPopup.add(createItem);
+        JMenuItem delItem = new JMenuItem();
+        delItem.setForeground(Colors.textPrimary());
+        delItem.setBackground(Colors.bgRaised());
+        delItem.addActionListener(e -> {
+            if (scene.getSelectedEntity() != null)
+                scene.executeCommand(new com.aetherforge.model.DeleteEntityCommand(scene, scene.getSelectedEntity()));
+        });
+        vpPopup.add(delItem);
+        vpPopup.addSeparator();
+        JMenuItem snapItem = new JMenuItem();
+        snapItem.setForeground(Colors.textPrimary());
+        snapItem.setBackground(Colors.bgRaised());
+        snapItem.addActionListener(e -> { snapEnabled = !snapEnabled; repaint(); });
+        vpPopup.add(snapItem);
+
+        MouseAdapter popupAdapter = new MouseAdapter() {
+            public void mousePressed(MouseEvent e) {
+                if (e.isPopupTrigger()) showPopup(e);
+            }
+            public void mouseReleased(MouseEvent e) {
+                if (e.isPopupTrigger()) showPopup(e);
+            }
+            private void showPopup(MouseEvent e) {
+                createItem.setText("+ " + com.aetherforge.util.I18n.get("tree.new"));
+                delItem.setText(com.aetherforge.util.I18n.get("tree.delete"));
+                snapItem.setText((snapEnabled ? "Disable " : "Enable ") + "Snap");
+                vpPopup.show(e.getComponent(), e.getX(), e.getY());
+            }
+        };
+        addMouseListener(popupAdapter);
     }
 
     public void animateEntityIn(Entity entity) {
@@ -106,7 +148,6 @@ public class ViewportPanel extends JPanel implements SceneListener {
                 if (now - fadeStartTime < FADE_MS) keepGoing = true;
                 else fadingOut = null;
             }
-            if (cameraAnimating) keepGoing = true;
             repaint();
             if (!keepGoing) animTimer.stop();
         });
