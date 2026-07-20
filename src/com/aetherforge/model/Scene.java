@@ -1,6 +1,5 @@
 package com.aetherforge.model;
 
-import com.aetherforge.util.Colors;
 import com.aetherforge.util.I18n;
 import java.awt.Color;
 import java.util.*;

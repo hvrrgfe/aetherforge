@@ -22,31 +22,38 @@ import javax.swing.filechooser.FileNameExtensionFilter;
  */
 public class MainWindow extends JFrame implements SceneListener {
 
-    private final Scene scene;
-    private final ViewportPanel viewport;
-    private final SceneController sceneController;
-    private final InspectorController inspectorController;
+    private Scene scene = null;
+    private ViewportPanel viewport = null;
+    private SceneController sceneController = null;
+    private InspectorController inspectorController = null;
     private JLabel statusLabel;
-    private JTextArea consoleArea;
-    private JButton langBtn, themeBtn;
+    private JTextArea consoleArea = null;
+    private JButton langBtn = null, themeBtn = null;
     private boolean isMaximized;
     private int normalX, normalY, normalWidth, normalHeight;
 
     private static final DateTimeFormatter TIME_FMT = DateTimeFormatter.ofPattern("HH:mm:ss");
 
     public MainWindow() {
-        this.scene = new Scene();
-        loadDemoScene();
+        try {
+            this.scene = new Scene();
+            loadDemoScene();
 
-        this.viewport = new ViewportPanel(scene);
-        this.sceneController = new SceneController(scene);
-        this.inspectorController = new InspectorController(scene);
+            this.viewport = new ViewportPanel(scene);
+            this.sceneController = new SceneController(scene);
+            this.inspectorController = new InspectorController(scene);
 
-        scene.addListener(this);
-        setupWindow();
-        assembleUI();
-        setupKeyboard();
-        setupLanguageAndTheme();
+            scene.addListener(this);
+            setupWindow();
+            assembleUI();
+            setupKeyboard();
+            setupLanguageAndTheme();
+        } catch (Exception e) {
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(null, "Failed to initialize: " + e.getMessage(),
+                "Fatal Error", JOptionPane.ERROR_MESSAGE);
+            System.exit(1);
+        }
     }
 
     private void setupWindow() {

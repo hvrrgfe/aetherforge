@@ -175,9 +175,9 @@ public class SceneController implements SceneListener {
             if (value instanceof DefaultMutableTreeNode) {
                 Object userObj = ((DefaultMutableTreeNode) value).getUserObject();
                 if (userObj instanceof Entity en) {
-                    label.setIcon(new EntityIcon(en.getColor(), 8));
+                    label.setIcon(new EntityIcon(en.getColor(), 8, en.getType()));
                 } else {
-                    label.setIcon(new EntityIcon(Colors.ORANGE, 8));
+                    label.setIcon(new EntityIcon(Colors.ORANGE, 8, ""));
                 }
             }
             if (hasFocus && isSel) {

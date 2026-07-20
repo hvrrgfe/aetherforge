@@ -21,7 +21,6 @@ public class AetherForgeStudio {
                 try { UIManager.setLookAndFeel(UIManager.getCrossPlatformLookAndFeelClassName()); }
                 catch (Exception ignored) {}
             }
-            setupCJKFont();
             new MainWindow().setVisible(true);
         });
     }
@@ -29,54 +28,30 @@ public class AetherForgeStudio {
     /**
      * 设置支持中文的全局字体（FlatLaf 默认 Inter/Segoe UI 缺少 CJK 字形）
      */
-    public static void setupCJKFont() {
-        try {
-            String[] fallback = {"Microsoft YaHei UI", "Microsoft YaHei", "SimSun", "SimHei"};
-            Font uiFont = null;
-            GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
-            Font[] all = ge.getAllFonts();
+    private static javax.swing.plaf.FontUIResource cjkFont;
 
+    public static void setupCJKFont() {
+        if (cjkFont != null) { UIManager.put("defaultFont", cjkFont); return; }
+        try {
+            String[] fallback = {"Microsoft YaHei UI", "Microsoft YaHei", "SimHei", "SimSun"};
+            Font uiFont = null;
             for (String name : fallback) {
-                for (Font f : all) {
-                    if (f.getFamily().equals(name) || f.getName().equals(name)) {
-                        uiFont = f.deriveFont(Font.PLAIN, 13f);
-                        break;
-                    }
-                }
-                if (uiFont != null && uiFont.canDisplay('中')) break;
-                // 直接尝试创建
                 uiFont = new Font(name, Font.PLAIN, 13);
                 if (uiFont.canDisplay('中') && uiFont.canDisplay('文')) break;
                 uiFont = null;
             }
             if (uiFont == null) uiFont = new Font("Microsoft YaHei UI", Font.PLAIN, 13);
-
-            javax.swing.plaf.FontUIResource fur = new javax.swing.plaf.FontUIResource(uiFont);
-            UIManager.put("defaultFont", fur);
-            UIManager.put("TextField.font", fur);
-            UIManager.put("TextArea.font", fur);
-            UIManager.put("Tree.font", fur);
-            UIManager.put("Label.font", fur);
-            UIManager.put("Button.font", fur);
-            UIManager.put("ToggleButton.font", fur);
-            UIManager.put("Menu.font", fur);
-            UIManager.put("MenuItem.font", fur);
-            UIManager.put("PopupMenu.font", fur);
-            UIManager.put("ComboBox.font", fur);
-            UIManager.put("CheckBox.font", fur);
-            UIManager.put("RadioButton.font", fur);
-            UIManager.put("Table.font", fur);
-            UIManager.put("TableHeader.font", fur);
-            UIManager.put("ToolTip.font", fur);
-            UIManager.put("List.font", fur);
-            UIManager.put("EditorPane.font", fur);
-            UIManager.put("OptionPane.font", fur);
-            UIManager.put("OptionPane.messageFont", fur);
-            UIManager.put("OptionPane.buttonFont", fur);
-            UIManager.put("ProgressBar.font", fur);
-            UIManager.put("TabbedPane.font", fur);
-            UIManager.put("ToolBar.font", fur);
-            UIManager.put("Spinner.font", fur);
-        } catch (Exception ignored) {}
+            cjkFont = new javax.swing.plaf.FontUIResource(uiFont);
+            for (String key : new String[]{"defaultFont","TextField.font","TextArea.font","Tree.font",
+                "Label.font","Button.font","ToggleButton.font","Menu.font","MenuItem.font",
+                "PopupMenu.font","ComboBox.font","CheckBox.font","RadioButton.font","Table.font",
+                "TableHeader.font","ToolTip.font","List.font","EditorPane.font","OptionPane.font",
+                "OptionPane.messageFont","OptionPane.buttonFont","ProgressBar.font","TabbedPane.font",
+                "ToolBar.font","Spinner.font"}) {
+                UIManager.put(key, cjkFont);
+            }
+        } catch (Exception e) {
+            System.err.println("[Font] CJK setup failed: " + e.getMessage());
+        }
     }
 }
