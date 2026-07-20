@@ -43,6 +43,7 @@ public class Entity {
     public void setPlayer(boolean v) { isPlayer = v; }
     public void setType(String t) { this.type = t; }
     public void setName(String n) { this.name = n; }
+    public void setId(String id) { this.id = id; }
     public void setPosition(double x, double y) { this.x = x; this.y = y; }
 
     public boolean containsPoint(double px, double py) {
