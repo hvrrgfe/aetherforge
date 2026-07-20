@@ -85,21 +85,6 @@ public class ViewportPanel extends JPanel implements SceneListener {
         snapItem.addActionListener(e -> { snapEnabled = !snapEnabled; repaint(); });
         vpPopup.add(snapItem);
 
-        MouseAdapter popupAdapter = new MouseAdapter() {
-            public void mousePressed(MouseEvent e) {
-                if (e.isPopupTrigger()) showPopup(e);
-            }
-            public void mouseReleased(MouseEvent e) {
-                if (e.isPopupTrigger()) showPopup(e);
-            }
-            private void showPopup(MouseEvent e) {
-                createItem.setText("+ " + com.aetherforge.util.I18n.get("tree.new"));
-                delItem.setText(com.aetherforge.util.I18n.get("tree.delete"));
-                snapItem.setText((snapEnabled ? "Disable " : "Enable ") + "Snap");
-                vpPopup.show(e.getComponent(), e.getX(), e.getY());
-            }
-        };
-        addMouseListener(popupAdapter);
     }
 
     public void animateEntityIn(Entity entity) {
@@ -333,7 +318,10 @@ public class ViewportPanel extends JPanel implements SceneListener {
             repaint();
         }
         @Override
-        public void mouseReleased(MouseEvent e) { isDragging = false; dragEntity = null; dragStart = null; }
+        public void mouseReleased(MouseEvent e) {
+            isDragging = false; dragEntity = null; dragStart = null;
+            if (e.isPopupTrigger()) showPopup(e);
+        }
         @Override
         public void mouseMoved(MouseEvent e) {
             double wx = (e.getX() - getWidth() / 2.0) / scene.getCameraZoom() - scene.getCameraX();
@@ -353,6 +341,28 @@ public class ViewportPanel extends JPanel implements SceneListener {
         public void mouseWheelMoved(MouseWheelEvent e) {
             double f = e.getWheelRotation() > 0 ? 1.0 / 1.12 : 1.12;
             scene.zoomCamera(f);
+        }
+        private void showPopup(MouseEvent e) {
+            JPopupMenu menu = new JPopupMenu();
+            menu.setBackground(Colors.bgRaised());
+            menu.setBorder(BorderFactory.createLineBorder(Colors.borderLine()));
+            JMenuItem ci = new JMenuItem("+ " + com.aetherforge.util.I18n.get("tree.new"));
+            ci.setForeground(Colors.textPrimary());
+            ci.setBackground(Colors.bgRaised());
+            ci.addActionListener(ev -> scene.executeCommand(new com.aetherforge.model.CreateEntityCommand(scene, "entity", com.aetherforge.util.I18n.get("entity.new"))));
+            menu.add(ci);
+            JMenuItem di = new JMenuItem(com.aetherforge.util.I18n.get("tree.delete"));
+            di.setForeground(Colors.textPrimary());
+            di.setBackground(Colors.bgRaised());
+            di.addActionListener(ev -> { if (scene.getSelectedEntity() != null) scene.executeCommand(new com.aetherforge.model.DeleteEntityCommand(scene, scene.getSelectedEntity())); });
+            menu.add(di);
+            menu.addSeparator();
+            JMenuItem si = new JMenuItem((snapEnabled ? "Disable " : "Enable ") + "Snap");
+            si.setForeground(Colors.textPrimary());
+            si.setBackground(Colors.bgRaised());
+            si.addActionListener(ev -> { snapEnabled = !snapEnabled; repaint(); });
+            menu.add(si);
+            menu.show(e.getComponent(), e.getX(), e.getY());
         }
     }
 }
