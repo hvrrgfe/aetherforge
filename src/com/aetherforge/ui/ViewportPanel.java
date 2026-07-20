@@ -28,6 +28,7 @@ public class ViewportPanel extends JPanel implements SceneListener {
     private long fadeStartTime;
     private static final long APPEAR_MS = 280;
     private static final long FADE_MS = 200;
+    private boolean snapEnabled = true;
     private Timer animTimer;
 
     public ViewportPanel(Scene scene) {
@@ -44,6 +45,9 @@ public class ViewportPanel extends JPanel implements SceneListener {
         addKeyListener(new KeyAdapter() {
             @Override
             public void keyPressed(KeyEvent e) {
+                if (e.getKeyCode() == KeyEvent.VK_S && (e.getModifiersEx() & InputEvent.SHIFT_DOWN_MASK) != 0) {
+                    snapEnabled = !snapEnabled;
+                }
                 if (e.getKeyCode() == KeyEvent.VK_DELETE && scene.getSelectedEntity() != null) {
                     scene.executeCommand(new com.aetherforge.model.DeleteEntityCommand(scene, scene.getSelectedEntity()));
                 }
@@ -211,7 +215,7 @@ public class ViewportPanel extends JPanel implements SceneListener {
     private void drawViewportHUD(Graphics2D g2, int w, int h, double zoom, double camX, double camY) {
         g2.setFont(UIManager.getFont("defaultFont").deriveFont(Font.PLAIN, 11f));
         g2.setColor(Colors.TEXT_MUTED);
-        g2.drawString(String.format("%.0f%%", zoom * 100), w - 55, h - 14);
+        g2.drawString(String.format("%.0f%%%s", zoom * 100, snapEnabled ? "" : " NS"), w - 75, h - 14);
         g2.setColor(Colors.BORDER_LINE);
         g2.fillRect(w - 55, h - 28, 40, 3);
         g2.setColor(Colors.BLUE);
@@ -243,9 +247,15 @@ public class ViewportPanel extends JPanel implements SceneListener {
         public void mouseDragged(MouseEvent e) {
             if (!isDragging) return;
             if (dragEntity != null) {
-                double dx = (e.getX() - dragOffsetX) / scene.getCameraZoom();
-                double dy = (e.getY() - dragOffsetY) / scene.getCameraZoom();
-                dragEntity.setPosition(dragEntity.getX() + dx, dragEntity.getY() + dy);
+                double rawDx = (e.getX() - dragOffsetX) / scene.getCameraZoom();
+                double rawDy = (e.getY() - dragOffsetY) / scene.getCameraZoom();
+                if (snapEnabled) {
+                    double newX = Math.round((dragEntity.getX() + rawDx) / 32) * 32;
+                    double newY = Math.round((dragEntity.getY() + rawDy) / 32) * 32;
+                    dragEntity.setPosition(newX, newY);
+                } else {
+                    dragEntity.setPosition(dragEntity.getX() + rawDx, dragEntity.getY() + rawDy);
+                }
                 dragOffsetX = e.getX(); dragOffsetY = e.getY();
             } else if (dragStart != null) {
                 scene.moveCamera(-(e.getX() - dragStart.x) / scene.getCameraZoom(),

@@ -51,6 +51,22 @@ public class Entity {
             && py >= y - height/2 && py <= y + height/2;
     }
 
+    private static final java.awt.Color[] PRESET_COLORS = {
+        new java.awt.Color(0x40, 0x80, 0xf0),
+        new java.awt.Color(0xf0, 0x40, 0x70),
+        new java.awt.Color(0x40, 0xd0, 0x80),
+        new java.awt.Color(0xf0, 0xa0, 0x40),
+        new java.awt.Color(0x30, 0xc0, 0x50),
+        new java.awt.Color(0xc0, 0x50, 0xf0),
+        new java.awt.Color(0xf0, 0xc0, 0x40),
+        new java.awt.Color(0x40, 0xe0, 0xe0),
+    };
+    private static int colorIndex = 0;
+
+    public static java.awt.Color nextPresetColor() {
+        return PRESET_COLORS[colorIndex++ % PRESET_COLORS.length];
+    }
+
     @Override
     public String toString() { return name; }
 }

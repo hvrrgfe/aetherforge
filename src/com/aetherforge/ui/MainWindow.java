@@ -27,6 +27,7 @@ public class MainWindow extends JFrame implements SceneListener {
     private final SceneController sceneController;
     private final InspectorController inspectorController;
     private JLabel statusLabel;
+    private JTextArea consoleArea;
     private JButton langBtn, themeBtn;
     private boolean isMaximized;
     private int normalX, normalY, normalWidth, normalHeight;
@@ -109,6 +110,12 @@ public class MainWindow extends JFrame implements SceneListener {
         loadItem.setBackground(Colors.BACKGROUND_RAISED);
         loadItem.addActionListener(e -> loadScene());
         fileMenu.add(loadItem);
+        fileMenu.addSeparator();
+        JMenuItem newItem = new JMenuItem(I18n.get("tree.new") + " Scene (Ctrl+Shift+N)");
+        newItem.setForeground(Colors.TEXT_PRIMARY);
+        newItem.setBackground(Colors.BACKGROUND_RAISED);
+        newItem.addActionListener(e -> newScene());
+        fileMenu.add(newItem);
 
         menuBtn.addActionListener(e -> fileMenu.show(menuBtn, 0, menuBtn.getHeight()));
         titleBar.add(menuBtn, BorderLayout.WEST);
@@ -134,6 +141,7 @@ public class MainWindow extends JFrame implements SceneListener {
         console.setBorder(BorderFactory.createEmptyBorder(4, 8, 4, 8));
         console.setCaretColor(Colors.BLUE);
         // Keep a reference for logging
+        this.consoleArea = console;
         console.putClientProperty("log", console);
 
         JPanel consolePanel = LayoutBuilder.createPanelWithHeader("panel.output",
@@ -205,6 +213,8 @@ public class MainWindow extends JFrame implements SceneListener {
         am.put("save", new AbstractAction() { public void actionPerformed(ActionEvent e) { saveScene(); } });
         im.put(KeyStroke.getKeyStroke(KeyEvent.VK_O, InputEvent.CTRL_DOWN_MASK), "open");
         am.put("open", new AbstractAction() { public void actionPerformed(ActionEvent e) { loadScene(); } });
+        im.put(KeyStroke.getKeyStroke(KeyEvent.VK_N, InputEvent.CTRL_DOWN_MASK | InputEvent.SHIFT_DOWN_MASK), "newScene");
+        am.put("newScene", new AbstractAction() { public void actionPerformed(ActionEvent e) { newScene(); } });
         im.put(KeyStroke.getKeyStroke(KeyEvent.VK_N, InputEvent.CTRL_DOWN_MASK), "newE");
         am.put("newE", new AbstractAction() { public void actionPerformed(ActionEvent e) { sceneController.createEntity(); } });
         im.put(KeyStroke.getKeyStroke(KeyEvent.VK_Z, InputEvent.CTRL_DOWN_MASK), "undo");
@@ -277,9 +287,14 @@ public class MainWindow extends JFrame implements SceneListener {
 
     @Override
     public void logMessage(String msg) {
-        // Console logging deferred
         String ts = LocalTime.now().format(TIME_FMT);
-        System.out.println("[" + ts + "] " + msg);
+        String line = "[" + ts + "] " + msg + "\n";
+        if (consoleArea != null) {
+            consoleArea.append(line);
+            consoleArea.setCaretPosition(consoleArea.getDocument().getLength());
+        } else {
+            System.out.print(line);
+        }
     }
 
     private void updateStatus() {
@@ -311,6 +326,16 @@ public class MainWindow extends JFrame implements SceneListener {
     // ═══════════════════════════════════════════════════════════
     //  文件操作
     // ═══════════════════════════════════════════════════════════
+
+    private void newScene() {
+        int r = JOptionPane.showConfirmDialog(this, "Clear scene? Unsaved changes lost.",
+            "New Scene", JOptionPane.OK_CANCEL_OPTION, JOptionPane.WARNING_MESSAGE);
+        if (r != JOptionPane.OK_OPTION) return;
+        scene.getEntities().clear();
+        scene.resetCamera();
+        scene.fireChange();
+        scene.fireLog("New scene");
+    }
 
     private void saveScene() {
         JFileChooser fc = new JFileChooser();

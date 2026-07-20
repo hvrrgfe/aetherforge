@@ -63,10 +63,16 @@ public class InspectorController implements com.aetherforge.model.SceneListener 
             addSection(I18n.get("inspector.transform"));
 
             // Editable fields with FocusLost validation
+            // Name editing
+            addStringField(I18n.get("inspector.name"), sel.getName(), s -> { sel.setName(s); scene.fireChange(); });
+
             addEditField("X", sel.getX(), v -> { sel.setX(v); scene.fireChange(); });
             addEditField("Y", sel.getY(), v -> { sel.setY(v); scene.fireChange(); });
             addEditField(I18n.get("inspector.width"), sel.getWidth(), v -> { sel.setWidth(v); scene.fireChange(); });
             addEditField(I18n.get("inspector.height"), sel.getHeight(), v -> { sel.setHeight(v); scene.fireChange(); });
+
+            // Color swatch
+            addColorField(sel);
         }
 
         panel.revalidate();
@@ -159,10 +165,89 @@ public class InspectorController implements com.aetherforge.model.SceneListener 
             double v = Double.parseDouble(field.getText().trim());
             setter.set(v);
             field.setForeground(Colors.TEXT_PRIMARY);
-            // Keep formatted value
             field.setText(String.valueOf((int) v));
         } catch (NumberFormatException e) {
             field.setForeground(Colors.RED);
         }
+    }
+
+    @FunctionalInterface
+    private interface StringSetter { void set(String s); }
+
+    private void addStringField(String label, String value, StringSetter setter) {
+        JPanel row = new JPanel(new BorderLayout());
+        row.setBackground(Colors.BACKGROUND_DEEPEST);
+        row.setBorder(new EmptyBorder(1, DP10, 1, DP10));
+        row.setMaximumSize(new Dimension(9999, 24));
+        JLabel l = new JLabel(label);
+        l.setFont(UIManager.getFont("defaultFont").deriveFont(Font.PLAIN, 11f));
+        l.setForeground(Colors.TEXT_MUTED);
+        l.setPreferredSize(new Dimension(60, 18));
+        JTextField field = new JTextField(value);
+        field.setFont(UIManager.getFont("defaultFont").deriveFont(Font.PLAIN, 11f));
+        field.setForeground(Colors.TEXT_PRIMARY);
+        field.setBackground(Colors.BACKGROUND_DARK);
+        field.setCaretColor(Colors.BLUE);
+        field.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(Colors.BORDER_LINE, 1), new EmptyBorder(1, DP4, 1, DP4)));
+        field.addActionListener(e -> { setter.set(field.getText()); scene.fireChange(); });
+        field.addFocusListener(new java.awt.event.FocusAdapter() {
+            @Override public void focusLost(java.awt.event.FocusEvent e) { setter.set(field.getText()); scene.fireChange(); }
+        });
+        row.add(l, BorderLayout.WEST);
+        row.add(field, BorderLayout.CENTER);
+        panel.add(row);
+    }
+
+    private void addColorField(com.aetherforge.model.Entity entity) {
+        java.awt.Color[] palette = {
+            com.aetherforge.util.Colors.BLUE,
+            com.aetherforge.util.Colors.RED,
+            com.aetherforge.util.Colors.GREEN,
+            com.aetherforge.util.Colors.ORANGE,
+            new java.awt.Color(0x30, 0xc0, 0x50),
+            new java.awt.Color(0xc0, 0x50, 0xf0),
+            new java.awt.Color(0xf0, 0xc0, 0x40),
+            new java.awt.Color(0x40, 0xe0, 0xe0),
+        };
+
+        JPanel row = new JPanel(new FlowLayout(FlowLayout.LEFT, 4, 2));
+        row.setBackground(Colors.BACKGROUND_DEEPEST);
+        row.setBorder(new EmptyBorder(4, DP10, 4, DP10));
+        row.setMaximumSize(new Dimension(9999, 32));
+
+        JLabel label = new JLabel(I18n.get("inspector.type") + " color");
+        label.setFont(UIManager.getFont("defaultFont").deriveFont(Font.PLAIN, 11f));
+        label.setForeground(Colors.TEXT_MUTED);
+        label.setPreferredSize(new Dimension(60, 20));
+        row.add(label);
+
+        for (java.awt.Color c : palette) {
+            JButton swatch = new JButton() {
+                @Override
+                protected void paintComponent(Graphics g) {
+                    Graphics2D g2 = (Graphics2D) g.create();
+                    g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                    boolean isCurrent = entity.getColor().equals(c);
+                    g2.setColor(c);
+                    g2.fillOval(2, 2, getWidth() - 4, getHeight() - 4);
+                    if (isCurrent) {
+                        g2.setColor(java.awt.Color.WHITE);
+                        g2.setStroke(new BasicStroke(2f));
+                        g2.drawOval(1, 1, getWidth() - 2, getHeight() - 2);
+                    }
+                    g2.dispose();
+                }
+            };
+            swatch.setPreferredSize(new Dimension(20, 20));
+            swatch.setFocusPainted(false);
+            swatch.setBorderPainted(false);
+            swatch.setContentAreaFilled(false);
+            swatch.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+            swatch.setToolTipText(String.format("#%06x", c.getRGB() & 0xFFFFFF));
+            swatch.addActionListener(e -> { entity.setColor(c); scene.fireChange(); refresh(); });
+            row.add(swatch);
+        }
+        panel.add(row);
     }
 }
