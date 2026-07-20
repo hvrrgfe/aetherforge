@@ -57,6 +57,9 @@ public class ViewportPanel extends JPanel implements SceneListener {
         });
 
         scene.addListener(this);
+        targetCamX = scene.getCameraX();
+        targetCamY = scene.getCameraY();
+        targetCamZoom = scene.getCameraZoom();
     }
 
     public void animateEntityIn(Entity entity) {
@@ -72,35 +75,25 @@ public class ViewportPanel extends JPanel implements SceneListener {
     }
 
     private double getEffectiveZoom() {
-        return cameraAnimating ? targetCamZoom : scene.getCameraZoom();
+        return scene.getCameraZoom();
     }
 
     private double getEffectiveCamX() {
-        return cameraAnimating ? targetCamX : scene.getCameraX();
+        return scene.getCameraX();
     }
 
     private double getEffectiveCamY() {
-        return cameraAnimating ? targetCamY : scene.getCameraY();
+        return scene.getCameraY();
     }
 
     private void updateCameraAnimation() {
-        if (!cameraAnimating) return;
-        double dx = scene.getCameraX() - targetCamX;
-        double dy = scene.getCameraY() - targetCamY;
-        double dz = scene.getCameraZoom() - targetCamZoom;
-        double dist = Math.sqrt(dx*dx + dy*dy + dz*dz * 100);
-        if (dist < 1.0) {
-            cameraAnimating = false;
-            return;
-        }
-        double speed = 0.12;
-        targetCamX += dx * speed;
-        targetCamY += dy * speed;
-        targetCamZoom += dz * speed;
+        // Smooth camera disabled for now - use direct values
     }
 
     public void smoothMoveCamera(double dx, double dy) {
         scene.moveCamera(-dx / scene.getCameraZoom(), -dy / scene.getCameraZoom());
+        targetCamX = scene.getCameraX();
+        targetCamY = scene.getCameraY();
     }
 
     private void startAnimTimer() {
