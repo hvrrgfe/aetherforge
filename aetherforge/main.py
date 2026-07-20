@@ -1,19 +1,23 @@
 '''
 AetherForge Main Entry - Integrated game server with runtime.
 '''
-import sys, os, json, threading, time, webbrowser
+import sys, os, json, threading, time
 from flask import Flask, request, jsonify, send_from_directory
 from aetherforge.core.world_model import WorldModel
-from aetherforge.api.tools import EngineTools, ToolResult
+from aetherforge.api.tools import ToolResult
+from aetherforge.api.engine_v2 import EngineToolsV2
 from aetherforge.runtime.game_loop import GameRuntime
 
-HERE = os.path.dirname(os.path.abspath(__file__))
+if getattr(sys, 'frozen', False):
+    HERE = sys._MEIPASS
+else:
+    HERE = os.path.dirname(os.path.abspath(__file__))
 
 class AetherForgeServer:
     def __init__(self, host="127.0.0.1", port=7890):
         self.host, self.port = host, port
         self.world = WorldModel()
-        self.tools = EngineTools(self.world)
+        self.tools = EngineToolsV2(self.world)
         self.runtime = GameRuntime(self.world)
         self._make_app()
 
@@ -48,7 +52,35 @@ class AetherForgeServer:
             if tool_name == "set_time_scale":
                 runtime.set_time_scale(data.get("scale",1.0))
                 return ToolResult(True, {})
+            if tool_name == "modify_entity_quick":
+                ok = self.world.quick_modify_entity(data.get("entity_id",""), data.get("changes",{}))
+                return ToolResult(ok, {})
+            if tool_name == "remove_entity_quick":
+                ok = self.world.quick_remove_entity(data.get("entity_id",""))
+                return ToolResult(ok, {})
             return ToolResult(False, error=f"Unknown tool: {tool_name}")
+
+        def _build_game_state():
+            """Build game-state dict directly from world entities, no snapshot overhead."""
+            entities = []
+            for eid, e in self.world.entities.items():
+                pos = e.position if hasattr(e, 'position') else {}
+                viz = e.visual if hasattr(e, 'visual') else {}
+                sz = e.size if hasattr(e, 'size') else {}
+                entities.append({
+                    "id": eid, "name": e.name if hasattr(e, 'name') else "",
+                    "type": e.semantic_type if hasattr(e, 'semantic_type') else "",
+                    "x": pos.get("x", 0), "y": pos.get("y", 0),
+                    "width": sz.get("width", 32), "height": sz.get("height", 32),
+                    "color": viz.get("color", "#888"), "shape": viz.get("shape", "rectangle"),
+                    "state": e.state if hasattr(e, 'state') else {},
+                    "is_player": eid == self.world.player_entity_id,
+                })
+            return {
+                "tick": self.world.tick, "weather": self.world.weather,
+                "game_time": self.world.game_time, "entities": entities,
+                "player_entity_id": self.world.player_entity_id,
+            }
 
         @app.after_request
         def add_security_headers(response):
@@ -78,21 +110,51 @@ class AetherForgeServer:
 
         @app.route("/api/game-state", methods=["GET"])
         def game_state():
-            snap = self.world.snapshot()
-            entities = []
-            for eid, ed in snap.entities.items():
-                pos = ed.get("position",{}); viz = ed.get("visual",{})
-                entities.append({
-                    "id": eid, "name": ed.get("name",""), "type": ed.get("semantic_type",""),
-                    "x": pos.get("x",0), "y": pos.get("y",0),
-                    "width": ed.get("size",{}).get("width",32),
-                    "height": ed.get("size",{}).get("height",32),
-                    "color": viz.get("color","#888"), "shape": viz.get("shape","rectangle"),
-                    "state": ed.get("state",{}), "is_player": eid == snap.player_entity_id,
-                })
-            return jsonify({"tick":snap.tick,"weather":snap.weather,
-                "game_time":snap.game_time,"entities":entities,
-                "player_entity_id":snap.player_entity_id})
+            return jsonify(_build_game_state())
+
+        @app.route("/api/tick", methods=["POST"])
+        def tick_combined():
+            """Generic tick: accepts player input + dt, returns game state in one request."""
+            try:
+                data = request.get_json(silent=True) or {}
+                dt = data.get("dt", 1.0 / 60.0)
+                # Apply player input (if any)
+                inp = {k: data.get(k, False) for k in ["up", "down", "left", "right"]}
+                runtime.set_player_input(**inp)
+                # Tick the game world
+                runtime.tick(dt)
+                return jsonify(_build_game_state())
+            except Exception as ex:
+                return jsonify({"tick": self.world.tick, "error": str(ex), "entities": []}), 500
+
+        @app.route("/api/setup", methods=["POST"])
+        def setup_world():
+            """Clear world to empty slate. Optionally create a default player entity."""
+            try:
+                world = self.world
+                data = request.get_json(silent=True) or {}
+                for eid in list(world.entities):
+                    world.quick_remove_entity(eid)
+                for rid in list(world.rules):
+                    world.remove_rule(rid)
+                # Optionally create a player entity
+                if data.get("create_player"):
+                    from aetherforge.core import SemanticEntity
+                    pos = data.get("position", {"x": 400, "y": 300})
+                    player = SemanticEntity(
+                        entity_id=data.get("player_id", "player"),
+                        semantic_type="player", name=data.get("name", "Player"),
+                        description="The player character",
+                        position=pos,
+                        visual=data.get("visual", {"color": "#00ccff", "shape": "rectangle"}),
+                        size=data.get("size", {"width": 32, "height": 32}),
+                        state=data.get("state", {}))
+                    world.create_entity(player)
+                    world.player_entity_id = player.entity_id
+                    return jsonify({"success": True, "player_id": player.entity_id})
+                return jsonify({"success": True, "player_id": None})
+            except Exception as ex:
+                return jsonify({"success": False, "error": str(ex)}), 500
 
         @app.route("/api/game-state-3d", methods=["GET"])
         def game_state_3d():
@@ -120,21 +182,20 @@ class AetherForgeServer:
 
         @app.route("/")
         def index():
-            return send_from_directory(static_dir, "index.html")
+            return app.send_static_file("index.html")
 
         @app.route("/viewer-3d")
         def viewer_3d():
             return send_from_directory(static_dir, "viewer_3d.html")
 
         self.app = app
-
     def start(self):
         print(f"  AetherForge Engine")
         print(f"  API:     http://{self.host}:{self.port}/api/")
         print(f"  Tools:   http://{self.host}:{self.port}/api/tools/")
         print(f"  Observe: http://{self.host}:{self.port}/api/observe")
         print(f"  Game:    http://{self.host}:{self.port}/")
-        self.app.run(host=self.host, port=self.port, debug=False, use_reloader=False)
+        self.app.run(host=self.host, port=self.port, debug=False, use_reloader=False, threaded=True)
 
 def main():
     import argparse

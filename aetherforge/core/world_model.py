@@ -1,4 +1,4 @@
-﻿'''
+'''
 Semantic World Model - the core of AetherForge.
 '''
 import json, copy, time
@@ -68,6 +68,34 @@ class WorldModel:
 
     def get_entity(self, entity_id):
         return self.entities.get(entity_id)
+
+    def quick_modify_entity(self, entity_id, changes):
+        """High-frequency mutate: skip checkpoint deepcopy."""
+        ent = self.entities.get(entity_id)
+        if not ent:
+            return False
+        for key, val in changes.items():
+            if hasattr(ent, key):
+                if key == 'state' and isinstance(val, dict):
+                    ent.state.update(val)
+                else:
+                    setattr(ent, key, val)
+        return True
+
+    def quick_remove_entity(self, entity_id):
+        """High-frequency remove: skip checkpoint deepcopy."""
+        if entity_id not in self.entities:
+            return False
+        if self.player_entity_id == entity_id:
+            self.player_entity_id = None
+        del self.entities[entity_id]
+        self.behaviors.pop(entity_id, None)
+        return True
+
+    def quick_create_entity(self, entity):
+        """High-frequency create: skip checkpoint deepcopy."""
+        self.entities[entity.entity_id] = entity
+        return entity.entity_id
 
     def find_entities(self, **filters):
         results = list(self.entities.values())

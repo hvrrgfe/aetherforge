@@ -1,81 +1,190 @@
 <!DOCTYPE html>
-<html lang='zh-CN'>
+<html lang="zh-CN">
 <head>
-<meta charset='UTF-8'>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>AetherForge</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-body{background:#0a0a0f;color:#e0e0e0;font:14px system-ui;display:flex;height:100vh;overflow:hidden}
-#side{width:260px;background:#12121a;border-right:1px solid #2a2a3a;padding:12px;overflow-y:auto;font-size:12px}
-#side h3{font-size:12px;color:#8888cc;margin:10px 0 5px}
-.info{background:#1a1a26;padding:6px 10px;border-radius:4px;margin:3px 0}
-.ent{background:#1a1a26;padding:4px 8px;border-radius:4px;margin:2px 0;font-size:11px}
-#view{flex:1;display:flex;align-items:center;justify-content:center;position:relative}
-canvas{border:1px solid #2a2a3a;border-radius:8px;background:#1a1a22}
-#log{position:absolute;bottom:12px;left:12px;right:12px;background:rgba(0,0,0,.75);padding:6px 12px;border-radius:4px;font:11px monospace;max-height:70px;overflow-y:auto;color:#aaccaa}
-.btn{background:#2a2a3a;border:1px solid #444;color:#ccc;padding:3px 8px;border-radius:4px;cursor:pointer;font-size:11px;margin:2px}
-.btn:hover{background:#3a3a4a}
+body{background:#0a0a12;color:#e0e0e0;font:14px system-ui;display:flex;height:100vh;overflow:hidden}
+#side{width:200px;background:#0d0d18;border-right:1px solid #1a1a3a;padding:16px}
+#side h1{font-size:16px;color:#4488ff;margin-bottom:12px}
+.stat{background:#12122a;border:1px solid #1a1a4a;border-radius:6px;padding:8px 12px;margin:6px 0}
+.stat-label{font-size:10px;color:#666}
+.stat-value{font-size:20px;font-weight:700}
+.controls{font-size:11px;color:#888;margin-top:12px;line-height:1.8}
+.controls kbd{background:#1a1a3a;border:1px solid #333;border-radius:3px;padding:1px 5px;font-size:10px;color:#ccc}
+#view{flex:1;position:relative;background:#0a0a12}
+canvas{display:block;width:100%;height:100%}
 </style>
 </head>
 <body>
-<div id='side'>
-<h3>AetherForge</h3>
-<div class='info'>Tick: <span id='tick'>0</span><br>Time: <span id='gt'>0.0</span>s<br>Weather: <span id='wx'>clear</span><br>Entities: <span id='ec'>0</span></div>
-<h3>Controls</h3>
-<div>
-<button class='btn' onclick='doCmd(''pause'')'>Pause</button>
-<button class='btn' onclick='doCmd(''resume'')'>Resume</button>
-<select onchange='doCmd(''set_time_scale'',{scale:+this.value})' style='background:#2a2a3a;color:#ccc;border:1px solid #444;border-radius:4px;font-size:11px;padding:2px 5px'>
-<option value='0.5'>0.5x</option><option value='1' selected>1x</option>
-<option value='2'>2x</option>
-</select>
+<div id="side">
+  <h1>AETHERFORGE</h1>
+  <div class="stat"><div class="stat-label">TICK</div><div class="stat-value" id="tick" style="color:#4488ff">0</div></div>
+  <div class="stat"><div class="stat-label">ENTITIES</div><div class="stat-value" id="ecount" style="color:#44ff88">0</div></div>
+  <div class="stat"><div class="stat-label">PLAYER</div><div class="stat-value" id="pinfo" style="color:#ffaa44;font-size:14px">-</div></div>
+  <div class="controls">
+    <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> Move<br>
+    <kbd>Space</kbd> / <kbd>J</kbd> Action<br>
+    <kbd>E</kbd> Interact<br>
+    <kbd>Esc</kbd> Pause
+  </div>
 </div>
-<div style='margin:4px 0'>
-<button class='btn' onclick='move(''up'')'>U</button>
-<button class='btn' onclick='move(''left'')'>L</button>
-<button class='btn' onclick='move(''down'')'>D</button>
-<button class='btn' onclick='move(''right'')'>R</button>
-<button class='btn' style='background:#4488aa' onclick='interact()'>Interact</button>
-</div>
-<h3>Entities</h3>
-<div id='elist'></div>
-</div>
-<div id='view'>
-<canvas id='cv' width='800' height='600'></canvas>
-<div id='log'>Engine started...</div>
-</div>
+<div id="view"><canvas id="cv"></canvas></div>
 <script>
-var cv=document.getElementById('cv'),ctx=cv.getContext('2d'),logEl=document.getElementById('log');
-var gs=null,paused=false,lt=0,keys={};
-document.onkeydown=function(e){keys[e.key]=true;if(e.key=='e')interact();if(e.key==' '){e.preventDefault();doCmd(paused?'resume':'pause');}};
-document.onkeyup=function(e){keys[e.key]=false;};
-function log(m){var d=document.createElement('div');d.textContent='> '+m;logEl.appendChild(d);while(logEl.children>50)logEl.removeChild(logEl.firstChild);}
-function move(d){var o={};o[d]=true;fetch('/api/tools/set_player_input',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(o)});setTimeout(function(){fetch('/api/tools/set_player_input',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({})});},100);}
-function interact(){fetch('/api/tools/player_interact',{method:'POST'}).then(function(r){return r.json();}).then(function(d){log((d.success?'Interacted: ':'Fail: ')+(d.data?d.data.target_name||d.error:d.error));});}
-function doCmd(n,d){d=d||{};fetch('/api/tools/'+n,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(d)}).then(function(r){return r.json();}).then(function(d){if(n=='pause')paused=true;if(n=='resume')paused=false;});}
-function ui(){if(!gs)return;
-  document.getElementById('tick').textContent=gs.tick;
-  document.getElementById('gt').textContent=gs.game_time.toFixed(1);
-  document.getElementById('wx').textContent=gs.weather;
-  document.getElementById('ec').textContent=gs.entities.length;
-  var el=document.getElementById('elist');el.innerHTML='';
-  for(var i=0;i<gs.entities.length;i++){var e=gs.entities[i],d=document.createElement('div');d.className='ent';
-  var ss='';for(var k in e.state)ss+=k+':'+e.state[k]+' ';
-  d.innerHTML='<b>'+(e.name||e.type)+(e.is_player?' [P]':'')+'</b> '+ss;el.appendChild(d);}}
-function dr(){ctx.clearRect(0,0,800,600);if(!gs)return;
-  ctx.fillStyle='#2a2a35';ctx.fillRect(0,0,800,600);
-  if(gs.weather=='rainy'){ctx.strokeStyle='rgba(150,180,220,0.2)';ctx.lineWidth=1;for(var i=0;i<50;i++){var rx=(i*137+gs.tick*3)%800,ry=(i*251+gs.tick*7)%600;ctx.beginPath();ctx.moveTo(rx,ry);ctx.lineTo(rx-1,ry+8);ctx.stroke();}}
-  for(var i=0;i<gs.entities.length;i++){var e=gs.entities[i],x=e.x,y=e.y,w=e.width||28,h=e.height||28;
-  ctx.fillStyle='rgba(0,0,0,0.12)';ctx.beginPath();ctx.ellipse(x+w/2,y+h,w/2,3,0,0,Math.PI*2);ctx.fill();
-  ctx.fillStyle=e.color||'#888';
-  if(e.shape=='circle'){ctx.beginPath();ctx.arc(x+w/2,y+h/2,w/2,0,Math.PI*2);ctx.fill();}
-  else if(e.shape=='triangle'){ctx.beginPath();ctx.moveTo(x+w/2,y);ctx.lineTo(x+w,y+h);ctx.lineTo(x,y+h);ctx.closePath();ctx.fill();}
-  else ctx.fillRect(x,y,w,h);
-  ctx.strokeStyle=e.is_player?'#6af':'rgba(255,255,255,0.08)';ctx.lineWidth=e.is_player?2:1;ctx.strokeRect(x,y,w,h);
-  ctx.fillStyle=e.is_player?'#6af':'#aaa';ctx.font='10px system-ui';ctx.textAlign='center';ctx.fillText(e.name||e.type,x+w/2,y-3);}}
-function si(){var k=keys;fetch('/api/tools/set_player_input',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({up:!!(k['ArrowUp']||k['w']),down:!!(k['ArrowDown']||k['s']),left:!!(k['ArrowLeft']||k['a']),right:!!(k['ArrowRight']||k['d'])})});}
-function lp(ts){var dt=Math.min((ts-lt)/1000,0.05);lt=ts;si();if(!paused)fetch('/api/tools/tick',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({dt:dt})});fetch('/api/game-state').then(function(r){return r.json();}).then(function(d){gs=d;ui();dr();requestAnimationFrame(lp);});}
-log('AetherForge Engine Started');lt=performance.now();lp(lt);
+(function(){
+var cv=document.getElementById("cv"),ctx=cv.getContext("2d");
+var gs=null,lt=0,keys={},frame=0,errDiv=null;
+
+// Debug bar
+errDiv=document.createElement("div");
+errDiv.id="dbg";
+errDiv.style.cssText="position:fixed;bottom:0;left:0;right:0;background:#c00;color:#fff;padding:8px;font:12px monospace;z-index:999;display:none";
+document.body.appendChild(errDiv);
+function dbg(msg){errDiv.style.display="block";errDiv.textContent=msg;}
+
+function resize(){
+  var v=document.getElementById("view");
+  cv.width=v.clientWidth||800;
+  cv.height=v.clientHeight||600;
+  ctx.fillStyle="#0a0a12"; ctx.fillRect(0,0,cv.width,cv.height);
+  ctx.fillStyle="#4488ff"; ctx.font="16px system-ui";
+  ctx.fillText("AetherForge Engine",10,30);
+}
+resize();
+window.addEventListener("resize",resize);
+
+// Input
+document.onkeydown=function(e){
+  keys[e.key]=true;
+  if(e.key.length==1||e.key.startsWith("Arrow"))e.preventDefault();
+};
+document.onkeyup=function(e){keys[e.key]=false};
+
+// Render: draw all entities generically based on their visual/type
+function dr(){
+  var w=cv.width,h=cv.height;
+  ctx.clearRect(0,0,w,h);
+  ctx.fillStyle="#0a0a12"; ctx.fillRect(0,0,w,h);
+
+  if(!gs||!gs.entities){
+    ctx.fillStyle="#4488ff"; ctx.font="14px system-ui";
+    ctx.fillText("Connecting...",20,60);
+    return;
+  }
+
+  // Camera: center on player if one exists
+  var cx=0, cy=0;
+  for(var i=0;i<gs.entities.length;i++){
+    if(gs.entities[i].is_player){
+      cx=w/2-gs.entities[i].x;
+      cy=h/2-gs.entities[i].y;
+      break;
+    }
+  }
+
+  // HUD
+  ctx.fillStyle="rgba(255,255,255,0.25)";
+  ctx.font="11px monospace";
+  ctx.fillText("Tick:"+gs.tick+" Ent:"+gs.entities.length,8,h-8);
+  document.getElementById("tick").textContent=gs.tick;
+  document.getElementById("ecount").textContent=gs.entities.length;
+  var pi=document.getElementById("pinfo");
+  for(var i=0;i<gs.entities.length;i++){if(gs.entities[i].is_player){
+    pi.textContent=gs.entities[i].name||gs.entities[i].id;
+    break;
+  }}
+
+  // Draw each entity
+  for(var i=0;i<gs.entities.length;i++){
+    var e=gs.entities[i];
+    var x=e.x+cx, y=e.y+cy;
+    var ew=e.width||32, eh=e.height||32;
+    if(x<-ew||x>w+ew||y<-eh||y>h+eh)continue;
+
+    ctx.fillStyle=e.color||"#888";
+
+    if(e.shape=="circle"){
+      ctx.beginPath();
+      ctx.arc(x+ew/2,y+eh/2,Math.min(ew,eh)/2,0,Math.PI*2);
+      ctx.fill();
+    }else if(e.shape=="triangle"){
+      ctx.beginPath();
+      if(e.type=="enemy"){
+        ctx.moveTo(x+ew/2,y+eh); ctx.lineTo(x+ew,y); ctx.lineTo(x,y);
+      }else{
+        ctx.moveTo(x+ew/2,y); ctx.lineTo(x+ew,y+eh); ctx.lineTo(x,y+eh);
+      }
+      ctx.closePath(); ctx.fill();
+    }else{
+      ctx.fillRect(x,y,ew,eh);
+    }
+
+    // Label
+    if(e.name&&e.name!=e.id){
+      ctx.fillStyle="rgba(255,255,255,0.5)";
+      ctx.font="10px sans-serif";
+      ctx.fillText(e.name,x,y-4);
+    }
+
+    // Player indicator
+    if(e.is_player){
+      ctx.strokeStyle="rgba(255,255,255,0.3)";
+      ctx.lineWidth=1;
+      ctx.strokeRect(x-2,y-2,ew+4,eh+4);
+    }
+  }
+}
+
+function lp(ts){
+  frame++;
+  var dt=Math.min((ts-lt)/1000,0.05);lt=ts;
+  if(dt<=0)dt=0.016;
+
+  // Package all input for the generic tick
+  var payload={
+    up:!!(keys["w"]||keys["W"]||keys["ArrowUp"]),
+    down:!!(keys["s"]||keys["S"]||keys["ArrowDown"]),
+    left:!!(keys["a"]||keys["A"]||keys["ArrowLeft"]),
+    right:!!(keys["d"]||keys["D"]||keys["ArrowRight"]),
+    dt:dt
+  };
+
+  var x=new XMLHttpRequest();
+  x.open("POST","/api/tick",true);
+  x.setRequestHeader("Content-Type","application/json");
+  x.onload=function(){
+    try{
+      var r=JSON.parse(x.responseText);
+      if(r.error)dbg("Err: "+r.error);
+      gs=r;
+    }catch(e){dbg("Parse: "+e.message);}
+    dr();
+    requestAnimationFrame(lp);
+  };
+  x.onerror=function(){requestAnimationFrame(lp)};
+  x.send(JSON.stringify(payload));
+}
+
+// Init
+lt=performance.now();
+// Setup: clear world. Create a default player entity so something shows.
+var setupPayload={create_player:true,position:{x:400,y:300},visual:{color:"#00ccff",shape:"rectangle"},size:{width:28,height:28}};
+var x=new XMLHttpRequest();
+x.open("POST","/api/setup",true);
+x.setRequestHeader("Content-Type","application/json");
+x.onload=function(){
+  try{
+    var r=JSON.parse(x.responseText);
+    if(!r.success)dbg("Setup: "+(r.error||"fail"));
+  }catch(e){}
+  dr();
+  lp(lt);
+};
+x.onerror=function(){lp(lt)};
+x.send(JSON.stringify(setupPayload));
+})();
 </script>
 </body>
 </html>
