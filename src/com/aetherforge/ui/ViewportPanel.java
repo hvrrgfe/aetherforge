@@ -302,14 +302,12 @@ public class ViewportPanel extends JPanel implements SceneListener {
             for (Entity en : scene.getEntities()) {
                 if (en.containsPoint(wx, wy)) { hit = en; break; }
             }
-            if (hit != null && toolMode == ToolMode.SELECT) {
+            if (hit != null) {
                 scene.setSelectedEntity(hit);
-            }
-            if (hit != null && (toolMode == ToolMode.MOVE || toolMode == ToolMode.SELECT)) {
                 dragEntity = hit; isDragging = true;
                 dragOffsetX = e.getX(); dragOffsetY = e.getY();
-            } else if (hit == null) {
-                if (toolMode == ToolMode.SELECT) scene.clearSelection();
+            } else {
+                scene.clearSelection();
                 isDragging = true; dragStart = e.getPoint();
             }
             repaint();
