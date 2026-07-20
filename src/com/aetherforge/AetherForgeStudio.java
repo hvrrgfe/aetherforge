@@ -31,17 +31,19 @@ public class AetherForgeStudio {
     private static javax.swing.plaf.FontUIResource cjkFont;
 
     public static void setupCJKFont() {
-        if (cjkFont != null) { UIManager.put("defaultFont", cjkFont); return; }
         try {
-            String[] fallback = {"Microsoft YaHei UI", "Microsoft YaHei", "SimHei", "SimSun"};
-            Font uiFont = null;
-            for (String name : fallback) {
-                uiFont = new Font(name, Font.PLAIN, 13);
-                if (uiFont.canDisplay('中') && uiFont.canDisplay('文')) break;
-                uiFont = null;
+            if (cjkFont == null) {
+                String[] fallback = {"Microsoft YaHei UI", "Microsoft YaHei", "SimHei", "SimSun"};
+                Font uiFont = null;
+                for (String name : fallback) {
+                    uiFont = new Font(name, Font.PLAIN, 13);
+                    if (uiFont.canDisplay('中') && uiFont.canDisplay('文')) break;
+                    uiFont = null;
+                }
+                if (uiFont == null) uiFont = new Font("Microsoft YaHei UI", Font.PLAIN, 13);
+                cjkFont = new javax.swing.plaf.FontUIResource(uiFont);
             }
-            if (uiFont == null) uiFont = new Font("Microsoft YaHei UI", Font.PLAIN, 13);
-            cjkFont = new javax.swing.plaf.FontUIResource(uiFont);
+            // 每次全量设置，确保 FlatLaf 重置后所有组件都有 CJK 字体
             for (String key : new String[]{"defaultFont","TextField.font","TextArea.font","Tree.font",
                 "Label.font","Button.font","ToggleButton.font","Menu.font","MenuItem.font",
                 "PopupMenu.font","ComboBox.font","CheckBox.font","RadioButton.font","Table.font",

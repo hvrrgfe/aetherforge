@@ -2,6 +2,7 @@ package com.aetherforge.model;
 
 import java.awt.Color;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicInteger;
 public class Entity {
     private static int instanceCounter = 0;
     private String id;

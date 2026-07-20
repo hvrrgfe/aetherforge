@@ -42,3 +42,11 @@ com/formdev/
 .mvn/
 mvnw
 mvnw.cmd
+
+
+# Build artifacts
+MANIFEST.MF
+AetherForgeStudio-fat.jar
+dist-input/
+
+_fix5.py

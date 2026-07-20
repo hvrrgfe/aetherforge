@@ -1,4 +1,4 @@
-@echo off
+﻿@echo off
 chcp 65001 >nul
 setlocal enabledelayedexpansion
 
@@ -6,53 +6,57 @@ echo === AetherForge Studio Build Script ===
 echo.
 
 rem === Configuration ===
-rem Set JAVA_HOME to your JDK 21+ path, or it will use the JDK from PATH
 if "%JAVA_HOME%"=="" (
     if exist "D:\game\jdk21\jdk-21.0.11+10" (
         set JAVA_HOME=D:\game\jdk21\jdk-21.0.11+10
     ) else (
-        echo [ERROR] JAVA_HOME not set and default path not found.
-        echo Set JAVA_HOME to your JDK 21 installation, e.g.:
-        echo   set JAVA_HOME=C:\Program Files\Java\jdk-21
+        echo [ERROR] JAVA_HOME not set. Set to your JDK 21+ path.
         exit /b 1
     )
 )
 
 set BASE=%~dp0
 set BUILD=%BASE%build
+set DIST=%BASE%dist
 set SRC=%BASE%src
 set LIBS=%BASE%flatlaf-3.5.4.jar
-set JAR=%BASE%AetherForgeStudio.jar
 
 echo JDK: %JAVA_HOME%
 echo.
 
-echo [1/4] Cleaning build directory...
+echo [1/4] Cleaning...
 if exist "%BUILD%" rmdir /s /q "%BUILD%"
-mkdir "%BUILD%" 2>nul
+if exist "%DIST%" rmdir /s /q "%DIST%"
+mkdir "%BUILD%\classes" 2>nul
 
-echo [2/4] Extracting FlatLaf into build...
-cd /d "%BUILD%"
-"%JAVA_HOME%\bin\jar" xf "%LIBS%"
-
-echo [3/4] Compiling Java sources...
+echo [2/4] Compiling...
 cd /d "%BASE%"
-"%JAVA_HOME%\bin\javac" -cp "%BUILD%" -d "%BUILD%" -encoding UTF8 ^
-    "%SRC%\com\aetherforge\AetherForgeStudio.java" ^
-    "%SRC%\com\aetherforge\model\*.java" ^
-    "%SRC%\com\aetherforge\ui\*.java" ^
-    "%SRC%\com\aetherforge\util\*.java"
-if errorlevel 1 (
-    echo [ERROR] Compilation failed!
-    exit /b 1
-)
+"%JAVA_HOME%\bin\javac" -cp "%LIBS%" -d "%BUILD%\classes" -encoding UTF8 src\com\aetherforge\AetherForgeStudio.java
+if errorlevel 1 ( echo [ERROR] Compilation failed! & exit /b 1 )
 
-echo [4/4] Packaging JAR...
-cd /d "%BUILD%"
-echo Main-Class: com.aetherforge.AetherForgeStudio > MANIFEST.MF
-"%JAVA_HOME%\bin\jar" cfm "%JAR%" MANIFEST.MF -C . .
+echo [3/4] Creating fat JAR...
+cd /d "%BUILD%\classes"
+"%JAVA_HOME%\bin\jar" xf "%LIBS%" 2>nul
+cd /d "%BASE%"
+echo Main-Class: com.aetherforge.AetherForgeStudio > "%BUILD%\MANIFEST.MF"
+"%JAVA_HOME%\bin\jar" cfm "%BASE%AetherForgeStudio-fat.jar" "%BUILD%\MANIFEST.MF" -C "%BUILD%\classes" .
+if errorlevel 1 ( echo [ERROR] JAR creation failed! & exit /b 1 )
+
+echo [4/4] Creating Windows EXE (jpackage)...
+mkdir "%BASE%\dist-input" 2>nul
+copy /Y "%BASE%AetherForgeStudio-fat.jar" "%BASE%\dist-input\" >nul
+"%JAVA_HOME%\bin\jpackage" --type app-image -n AetherForgeStudio ^
+    --main-jar AetherForgeStudio-fat.jar ^
+    --main-class com.aetherforge.AetherForgeStudio ^
+    --input "%BASE%\dist-input" --dest "%DIST%" ^
+    --java-options "-Dfile.encoding=UTF-8"
+if errorlevel 1 ( echo [ERROR] jpackage failed! & exit /b 1 )
 
 echo.
-echo === Build complete ===
-echo JAR: %JAR%
-echo Run: "%JAVA_HOME%\bin\javaw" -jar "%JAR%"
+echo === Build Complete ===
+echo EXE: %DIST%\AetherForgeStudio\AetherForgeStudio.exe
+echo Run the EXE directly - no Java required on target machine.
+
+rem Cleanup
+rmdir /s /q "%BASE%\dist-input" 2>nul
+del "%BASE%AetherForgeStudio-fat.jar" 2>nul

@@ -3,6 +3,7 @@ package com.aetherforge.ui;
 import com.aetherforge.util.Colors;
 import com.aetherforge.util.DarkScrollBarUI;
 import com.aetherforge.util.I18n;
+import com.aetherforge.util.EntityIcon;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
@@ -26,7 +27,8 @@ public final class LayoutBuilder {
     }
 
     public static JPanel createTitleBar(MouseAdapter dragHandler,
-            Runnable onMinimize, Runnable onMaximize, Runnable onClose) {
+            Runnable onMinimize, Runnable onMaximize, Runnable onClose,
+            JButton menuButton) {
         JPanel titleBar = new JPanel(new BorderLayout()) {
             @Override
             protected void paintComponent(Graphics g) {
@@ -42,7 +44,10 @@ public final class LayoutBuilder {
         titleBar.setPreferredSize(new Dimension(0, DP40));
         JPanel left = new JPanel(new FlowLayout(FlowLayout.LEFT, DP8, 0));
         left.setOpaque(false);
-        JLabel icon = new JLabel(new com.aetherforge.util.EntityIcon(Colors.BLUE, DP16));
+        if (menuButton != null) {
+            left.add(menuButton);
+        }
+        JLabel icon = new JLabel(new EntityIcon(Colors.BLUE, DP16));
         icon.setBorder(new EmptyBorder(0, DP12, 0, DP4));
         JLabel tl = new JLabel("AetherForge Studio");
         tl.setFont(UIManager.getFont("defaultFont").deriveFont(Font.PLAIN, 12f));

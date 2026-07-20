@@ -82,10 +82,6 @@ public class MainWindow extends JFrame implements SceneListener {
     private void assembleUI() {
         // 标题栏
         WindowDragHandler drag = new WindowDragHandler();
-        JPanel tb = LayoutBuilder.createTitleBar(drag,
-            () -> setState(JFrame.ICONIFIED),
-            () -> toggleMaximized(),
-            () -> System.exit(0));
 
         // 汉堡菜单按钮（放在标题左侧）
         JButton menuBtn = new JButton("\u2630");
@@ -118,7 +114,12 @@ public class MainWindow extends JFrame implements SceneListener {
         fileMenu.add(newItem);
 
         menuBtn.addActionListener(e -> fileMenu.show(menuBtn, 0, menuBtn.getHeight()));
-        tb.add(menuBtn, BorderLayout.LINE_START);
+
+        JPanel tb = LayoutBuilder.createTitleBar(drag,
+            () -> setState(JFrame.ICONIFIED),
+            () -> toggleMaximized(),
+            () -> System.exit(0),
+            menuBtn);
 
         // 左：场景树
         JPanel leftPanel = LayoutBuilder.createPanelWithHeader("panel.explorer",
@@ -180,7 +181,7 @@ public class MainWindow extends JFrame implements SceneListener {
 
         JPanel right = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 0));
         right.setOpaque(false);
-        langBtn = new JButton(I18n.get("lang.en"));
+        langBtn = new JButton(I18n.get("lang.zh"));
         langBtn.setFont(UIManager.getFont("defaultFont").deriveFont(Font.PLAIN, 11f));
         langBtn.setFocusPainted(false); langBtn.setBorderPainted(false);
         langBtn.setContentAreaFilled(false);
@@ -242,13 +243,14 @@ public class MainWindow extends JFrame implements SceneListener {
     private void applyThemeAndLanguage() {
         Colors.updateTheme();
         getContentPane().setBackground(Colors.bgDeepest());
+        com.aetherforge.AetherForgeStudio.setupCJKFont();
         SwingUtilities.updateComponentTreeUI(this);
         sceneController.refreshLanguage();
-        langBtn.setText(I18n.getCurrentLang() == I18n.Lang.CHINESE ? I18n.get("lang.en") : I18n.get("lang.zh"));
+        langBtn.setText(I18n.getCurrentLang() == I18n.Lang.CHINESE ? I18n.get("lang.zh") : I18n.get("lang.en"));
         themeBtn.setText(switch (Theme.getCurrent()) {
-            case DARK -> I18n.get("theme.dracula");
-            case LIGHT -> I18n.get("theme.dark");
-            case DRACULA -> I18n.get("theme.light");
+            case DARK -> I18n.get("theme.dark");
+            case LIGHT -> I18n.get("theme.light");
+            case DRACULA -> I18n.get("theme.dracula");
         });
         updateStatus();
     }
@@ -344,7 +346,7 @@ public class MainWindow extends JFrame implements SceneListener {
         fc.setFileFilter(new FileNameExtensionFilter("AetherForge Scene (*.json)", "json"));
         fc.setSelectedFile(new java.io.File("scene.json"));
         if (fc.showSaveDialog(this) == JFileChooser.APPROVE_OPTION) {
-            try (PrintWriter pw = new PrintWriter(fc.getSelectedFile(), "UTF-8")) {
+            java.io.File file = fc.getSelectedFile(); if (!file.getName().toLowerCase().endsWith(".json")) file = new java.io.File(file.getAbsolutePath() + ".json"); try (PrintWriter pw = new PrintWriter(file, "UTF-8")) {
                 pw.write(scene.toJson());
                 scene.fireLog("Scene saved");
             } catch (IOException ex) {

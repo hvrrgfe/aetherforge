@@ -1,7 +1,6 @@
 package com.aetherforge.util;
 
 import java.awt.Color;
-import java.awt.Font;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.function.Consumer;
@@ -108,7 +107,7 @@ public final class Theme {
                 case DRACULA -> FlatDarkLaf.setup();
             }
             // 每个主题切换后重新应用 CJK 字体
-            applyCJKFont();
+            com.aetherforge.AetherForgeStudio.setupCJKFont();
         } catch (Exception e) {
             System.err.println("[Theme] Failed to set theme: " + e.getMessage());
         }
@@ -122,21 +121,4 @@ public final class Theme {
 
     public static void addChangeListener(Consumer<Profile> l) { listeners.add(l); }
 
-    /** 应用 CJK 兼容字体（覆盖 FlatLaf 的默认字体） */
-    private static void applyCJKFont() {
-        try {
-            String[] fallback = {"Microsoft YaHei UI", "Microsoft YaHei", "SimHei", "SimSun"};
-            Font uiFont = null;
-            for (String name : fallback) {
-                uiFont = new Font(name, Font.PLAIN, 13);
-                if (uiFont.canDisplay('中') && uiFont.canDisplay('文')) break;
-                uiFont = null;
-            }
-            if (uiFont == null) uiFont = new Font("Microsoft YaHei UI", Font.PLAIN, 13);
-            javax.swing.plaf.FontUIResource fur = new javax.swing.plaf.FontUIResource(uiFont);
-            UIManager.put("defaultFont", fur);
-        } catch (Exception e) {
-            System.err.println("[Theme] Failed to apply CJK font: " + e.getMessage());
-        }
-    }
 }

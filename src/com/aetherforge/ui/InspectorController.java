@@ -3,7 +3,6 @@ package com.aetherforge.ui;
 import com.aetherforge.model.Entity;
 import com.aetherforge.model.Scene;
 import com.aetherforge.util.Colors;
-import com.aetherforge.util.Colors;
 import com.aetherforge.util.I18n;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
