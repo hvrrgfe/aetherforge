@@ -1,12 +1,15 @@
 package com.aetherforge.util;
 
 import java.awt.Color;
+import java.awt.Font;
 import java.util.function.Consumer;
+import javax.swing.*;
 import com.formdev.flatlaf.FlatDarkLaf;
 import com.formdev.flatlaf.FlatLightLaf;
 
 /**
- * 主题系统 — 支持暗色/亮色/紫黑三种主题实时切换
+ * 主题系统 — 暗色/亮色/紫黑三种主题实时切换
+ * 每种主题切换后自动应用 CJK 兼容字体
  */
 public final class Theme {
     private Theme() {}
@@ -63,7 +66,7 @@ public final class Theme {
         static final Color INPUT  = new Color(0x0d, 0x0c, 0x12);
     }
 
-    // ─── 当前主题颜色（通过静态方法访问） ───
+    // ─── 当前主题颜色 ───
     public static Color bg0()     { return pick(Dark.BG0, Light.BG0, Dracula.BG0); }
     public static Color bg1()     { return pick(Dark.BG1, Light.BG1, Dracula.BG1); }
     public static Color bg2()     { return pick(Dark.BG2, Light.BG2, Dracula.BG2); }
@@ -77,13 +80,13 @@ public final class Theme {
     public static Color origin()  { return pick(Dark.ORIGIN, Light.ORIGIN, Dracula.ORIGIN); }
     public static Color inputBg() { return pick(Dark.INPUT,  Light.INPUT,  Dracula.INPUT); }
 
-    // ─── 固定色（不随主题变化） ───
+    // ─── 固定色 ───
     public static final Color BLUE   = new Color(0x40, 0x80, 0xf0);
     public static final Color GREEN  = new Color(0x40, 0xd0, 0x80);
     public static final Color RED    = new Color(0xf0, 0x40, 0x70);
     public static final Color ORANGE = new Color(0xf0, 0xa0, 0x40);
 
-    // 兼容旧 Colors 引用
+    // 兼容旧引用
     @Deprecated
     public static final Color BACKGROUND_DEEPEST  = new Color(0x0a, 0x0a, 0x0a);
     @Deprecated
@@ -107,8 +110,10 @@ public final class Theme {
             switch (p) {
                 case DARK    -> FlatDarkLaf.setup();
                 case LIGHT   -> FlatLightLaf.setup();
-                case DRACULA -> FlatDarkLaf.setup(); // Dracula via custom colors below
+                case DRACULA -> FlatDarkLaf.setup();
             }
+            // 每个主题切换后重新应用 CJK 字体
+            applyCJKFont();
         } catch (Exception ignored) {}
         if (listener != null) listener.accept(p);
     }
@@ -119,4 +124,20 @@ public final class Theme {
     }
 
     public static void setChangeListener(Consumer<Profile> l) { listener = l; }
+
+    /** 应用 CJK 兼容字体（覆盖 FlatLaf 的默认字体） */
+    private static void applyCJKFont() {
+        try {
+            String[] fallback = {"Microsoft YaHei UI", "Microsoft YaHei", "SimHei", "SimSun"};
+            Font uiFont = null;
+            for (String name : fallback) {
+                uiFont = new Font(name, Font.PLAIN, 13);
+                if (uiFont.canDisplay('中') && uiFont.canDisplay('文')) break;
+                uiFont = null;
+            }
+            if (uiFont == null) uiFont = new Font("Microsoft YaHei UI", Font.PLAIN, 13);
+            javax.swing.plaf.FontUIResource fur = new javax.swing.plaf.FontUIResource(uiFont);
+            UIManager.put("defaultFont", fur);
+        } catch (Exception ignored) {}
+    }
 }
