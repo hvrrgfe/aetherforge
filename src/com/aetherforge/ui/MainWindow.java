@@ -75,19 +75,12 @@ public class MainWindow extends JFrame implements SceneListener {
     private void assembleUI() {
         // 标题栏
         WindowDragHandler drag = new WindowDragHandler();
-        JPanel titleBar = LayoutBuilder.createTitleBar(drag);
-        LayoutBuilder.createTitleButton(LayoutBuilder.TitleBtn.CLOSE).addActionListener(e -> System.exit(0));
-        LayoutBuilder.createTitleButton(LayoutBuilder.TitleBtn.MAXIMIZE).addActionListener(e -> toggleMaximized());
-        LayoutBuilder.createTitleButton(LayoutBuilder.TitleBtn.MINIMIZE).addActionListener(e -> setState(JFrame.ICONIFIED));
+        JPanel tb = LayoutBuilder.createTitleBar(drag,
+            () -> setState(JFrame.ICONIFIED),
+            () -> toggleMaximized(),
+            () -> System.exit(0));
 
-        // 重建带按钮的标题栏
-        JPanel tb = new JPanel(new BorderLayout());
-        tb.setPreferredSize(new Dimension(0, LayoutBuilder.DP40));
-        tb.setBackground(Colors.BACKGROUND_DARK);
-        // ... using the titleBar from LayoutBuilder
-        tb = titleBar;
-
-        // 汉堡菜单按钮
+        // 汉堡菜单按钮（放在标题左侧）
         JButton menuBtn = new JButton("\u2630");
         menuBtn.setFont(UIManager.getFont("defaultFont").deriveFont(Font.PLAIN, 14f));
         menuBtn.setFocusPainted(false); menuBtn.setBorderPainted(false);
@@ -118,7 +111,7 @@ public class MainWindow extends JFrame implements SceneListener {
         fileMenu.add(newItem);
 
         menuBtn.addActionListener(e -> fileMenu.show(menuBtn, 0, menuBtn.getHeight()));
-        titleBar.add(menuBtn, BorderLayout.WEST);
+        tb.add(menuBtn, BorderLayout.LINE_START);
 
         // 左：场景树
         JPanel leftPanel = LayoutBuilder.createPanelWithHeader("panel.explorer",
@@ -146,7 +139,7 @@ public class MainWindow extends JFrame implements SceneListener {
 
         JPanel consolePanel = LayoutBuilder.createPanelWithHeader("panel.output",
             LayoutBuilder.styledScroll(console));
-        consolePanel.setPreferredSize(new Dimension(0, 160));
+        // Let JSplitPane control console height (not fixed)
 
         JSplitPane vertSplit = LayoutBuilder.splitV(centerPanel, consolePanel);
 
@@ -243,6 +236,7 @@ public class MainWindow extends JFrame implements SceneListener {
         Colors.updateTheme();
         getContentPane().setBackground(Colors.BACKGROUND_DEEPEST);
         SwingUtilities.updateComponentTreeUI(this);
+        sceneController.refreshLanguage();
         langBtn.setText(I18n.getCurrentLang() == I18n.Lang.CHINESE ? I18n.get("lang.en") : I18n.get("lang.zh"));
         themeBtn.setText(switch (Theme.getCurrent()) {
             case DARK -> I18n.get("theme.dracula");

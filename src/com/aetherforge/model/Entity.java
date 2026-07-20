@@ -2,15 +2,13 @@ package com.aetherforge.model;
 
 import java.awt.Color;
 import java.util.UUID;
-import com.aetherforge.util.Colors;
-
 public class Entity {
     private static int instanceCounter = 0;
     private String id;
     private String type;
     private String name;
     private double x, y, width = 32, height = 32;
-    private Color color = Colors.BLUE;
+    private Color color;
     private boolean isCircle, isPlayer;
 
     public Entity(String type, String name) {
@@ -21,6 +19,7 @@ public class Entity {
         int offset = (instanceCounter % 10) * 40;
         this.x = offset - 180;
         this.y = (instanceCounter / 10) * 40 - 60;
+        this.color = nextPresetColor();
     }
 
     public String getId() { return id; }
@@ -51,20 +50,11 @@ public class Entity {
             && py >= y - height/2 && py <= y + height/2;
     }
 
-    private static final java.awt.Color[] PRESET_COLORS = {
-        new java.awt.Color(0x40, 0x80, 0xf0),
-        new java.awt.Color(0xf0, 0x40, 0x70),
-        new java.awt.Color(0x40, 0xd0, 0x80),
-        new java.awt.Color(0xf0, 0xa0, 0x40),
-        new java.awt.Color(0x30, 0xc0, 0x50),
-        new java.awt.Color(0xc0, 0x50, 0xf0),
-        new java.awt.Color(0xf0, 0xc0, 0x40),
-        new java.awt.Color(0x40, 0xe0, 0xe0),
-    };
+    // Colors.ENTITY_PALETTE 中定义的调色板
     private static int colorIndex = 0;
 
     public static java.awt.Color nextPresetColor() {
-        return PRESET_COLORS[colorIndex++ % PRESET_COLORS.length];
+        return com.aetherforge.util.Colors.ENTITY_PALETTE[colorIndex++ % com.aetherforge.util.Colors.ENTITY_PALETTE.length];
     }
 
     @Override

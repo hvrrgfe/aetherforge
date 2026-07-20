@@ -26,6 +26,18 @@ public final class Colors {
     public static Color GRID_LINE   = new Color(0x14, 0x14, 0x14);
     public static Color ORIGIN_LINE = new Color(0x2a, 0x2a, 0x2a);
 
+    // 实体颜色调色板（在 Inspector 和 Entity 之间共享）
+    public static final Color[] ENTITY_PALETTE = {
+        new Color(0x40, 0x80, 0xf0),
+        new Color(0xf0, 0x40, 0x70),
+        new Color(0x40, 0xd0, 0x80),
+        new Color(0xf0, 0xa0, 0x40),
+        new Color(0x30, 0xc0, 0x50),
+        new Color(0xc0, 0x50, 0xf0),
+        new Color(0xf0, 0xc0, 0x40),
+        new Color(0x40, 0xe0, 0xe0),
+    };
+
     // 固定色
     public static final Color BLUE   = new Color(0x40, 0x80, 0xf0);
     public static final Color GREEN  = new Color(0x40, 0xd0, 0x80);

@@ -25,7 +25,8 @@ public final class LayoutBuilder {
         return content;
     }
 
-    public static JPanel createTitleBar(MouseAdapter dragHandler) {
+    public static JPanel createTitleBar(MouseAdapter dragHandler,
+            Runnable onMinimize, Runnable onMaximize, Runnable onClose) {
         JPanel titleBar = new JPanel(new BorderLayout()) {
             @Override
             protected void paintComponent(Graphics g) {
@@ -50,9 +51,15 @@ public final class LayoutBuilder {
         titleBar.add(left, BorderLayout.WEST);
         JPanel right = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0, 0));
         right.setOpaque(false);
-        right.add(createTitleButton(TitleBtn.MINIMIZE));
-        right.add(createTitleButton(TitleBtn.MAXIMIZE));
-        right.add(createTitleButton(TitleBtn.CLOSE));
+        JButton minBtn = createTitleButton(TitleBtn.MINIMIZE);
+        minBtn.addActionListener(e -> { if (onMinimize != null) onMinimize.run(); });
+        right.add(minBtn);
+        JButton maxBtn = createTitleButton(TitleBtn.MAXIMIZE);
+        maxBtn.addActionListener(e -> { if (onMaximize != null) onMaximize.run(); });
+        right.add(maxBtn);
+        JButton clsBtn = createTitleButton(TitleBtn.CLOSE);
+        clsBtn.addActionListener(e -> { if (onClose != null) onClose.run(); });
+        right.add(clsBtn);
         titleBar.add(right, BorderLayout.EAST);
         titleBar.addMouseListener(dragHandler);
         titleBar.addMouseMotionListener(dragHandler);

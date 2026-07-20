@@ -135,6 +135,30 @@ public class SceneController implements SceneListener {
 
     // ─── 树节点渲染器 ───
 
+    // ─── 语言切换时刷新文本 ───
+
+    public void refreshLanguage() {
+        // Update tree root name
+        treeRoot.setUserObject(I18n.get("scene.root"));
+        treeModel.nodeChanged(treeRoot);
+        // Rebuild popup
+        JPopupMenu popup = new JPopupMenu();
+        popup.setBackground(Colors.BACKGROUND_RAISED);
+        popup.setBorder(BorderFactory.createLineBorder(Colors.BORDER_LINE));
+        JMenuItem addItem = new JMenuItem("+ " + I18n.get("tree.new"));
+        addItem.setForeground(Colors.TEXT_PRIMARY);
+        addItem.setBackground(Colors.BACKGROUND_RAISED);
+        addItem.addActionListener(e -> createEntity());
+        popup.add(addItem);
+        JMenuItem delItem = new JMenuItem(I18n.get("tree.delete"));
+        delItem.setForeground(Colors.TEXT_PRIMARY);
+        delItem.setBackground(Colors.BACKGROUND_RAISED);
+        delItem.addActionListener(e -> deleteSelected());
+        popup.add(delItem);
+        tree.setComponentPopupMenu(popup);
+        tree.repaint();
+    }
+
     private class SceneTreeRenderer extends DefaultTreeCellRenderer {
         @Override
         public Component getTreeCellRendererComponent(JTree tree, Object value,

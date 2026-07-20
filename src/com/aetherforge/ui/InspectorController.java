@@ -3,6 +3,7 @@ package com.aetherforge.ui;
 import com.aetherforge.model.Entity;
 import com.aetherforge.model.Scene;
 import com.aetherforge.util.Colors;
+import com.aetherforge.util.Colors;
 import com.aetherforge.util.I18n;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -200,16 +201,7 @@ public class InspectorController implements com.aetherforge.model.SceneListener 
     }
 
     private void addColorField(com.aetherforge.model.Entity entity) {
-        java.awt.Color[] palette = {
-            com.aetherforge.util.Colors.BLUE,
-            com.aetherforge.util.Colors.RED,
-            com.aetherforge.util.Colors.GREEN,
-            com.aetherforge.util.Colors.ORANGE,
-            new java.awt.Color(0x30, 0xc0, 0x50),
-            new java.awt.Color(0xc0, 0x50, 0xf0),
-            new java.awt.Color(0xf0, 0xc0, 0x40),
-            new java.awt.Color(0x40, 0xe0, 0xe0),
-        };
+        java.awt.Color[] palette = com.aetherforge.util.Colors.ENTITY_PALETTE;
 
         JPanel row = new JPanel(new FlowLayout(FlowLayout.LEFT, 4, 2));
         row.setBackground(Colors.BACKGROUND_DEEPEST);

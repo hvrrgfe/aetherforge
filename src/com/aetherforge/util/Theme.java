@@ -86,13 +86,6 @@ public final class Theme {
     public static final Color RED    = new Color(0xf0, 0x40, 0x70);
     public static final Color ORANGE = new Color(0xf0, 0xa0, 0x40);
 
-    // 兼容旧引用
-    @Deprecated
-    public static final Color BACKGROUND_DEEPEST  = new Color(0x0a, 0x0a, 0x0a);
-    @Deprecated
-    public static final Color BACKGROUND_DARK     = new Color(0x12, 0x12, 0x12);
-    @Deprecated
-    public static final Color BACKGROUND_PANEL    = new Color(0x18, 0x18, 0x18);
 
     private static Color pick(Color dark, Color light, Color dracula) {
         return switch (current) {
