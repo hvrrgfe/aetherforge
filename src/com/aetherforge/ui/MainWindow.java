@@ -34,6 +34,7 @@ public class MainWindow extends JFrame implements SceneListener {
     private int normalX, normalY, normalWidth, normalHeight;
 
     private static final DateTimeFormatter TIME_FMT = DateTimeFormatter.ofPattern("HH:mm:ss");
+    private static final int MAX_LOG_LINES = 500;
 
     public MainWindow() {
         try {
@@ -307,8 +308,14 @@ public class MainWindow extends JFrame implements SceneListener {
         String ts = LocalTime.now().format(TIME_FMT);
         String line = "[" + ts + "] " + msg + "\n";
         if (consoleArea != null) {
+            javax.swing.text.Document doc = consoleArea.getDocument();
+            if (doc.getLength() > 32000) {
+                try {
+                    doc.remove(0, doc.getLength() / 2);
+                } catch (javax.swing.text.BadLocationException ignored) {}
+            }
             consoleArea.append(line);
-            consoleArea.setCaretPosition(consoleArea.getDocument().getLength());
+            consoleArea.setCaretPosition(doc.getLength());
         } else {
             System.out.print(line);
         }
