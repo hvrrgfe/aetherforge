@@ -22,7 +22,7 @@ Thumbs.db
 # === Project-specific: exclude runtime and dist artifacts ===
 runtime/
 jre/
-dist/
+dist*
 *.zip
 *.exe
 
