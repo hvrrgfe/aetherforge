@@ -1,39 +1,44 @@
-﻿# Java build
+﻿# === Java build ===
 build/
+target/
 *.class
 *.jar
+*.war
 
-# IDE
+# === IDE ===
 .idea/
 *.iml
 .vscode/
+.project
+.classpath
+.settings/
 
-# OS
+# === OS ===
 Thumbs.db
 .DS_Store
+*.bak
+*.log
 
-# Temp Python scripts
+# === Project-specific: exclude runtime and dist artifacts ===
+runtime/
+jre/
+dist/
+*.zip
+*.exe
+
+# === Temp scripts ===
+_gen.py
 gen_*.py
 fix_*.py
 patch_*.py
 check_*.py
 
-# JRE runtime (too large for git, build it)
-dist/Studio/runtime/
-jre/
-runtime/
-
-# FlatLaf (downloaded separately)
+# === FlatLaf (downloaded via Maven normally) ===
 flatlaf-*.jar
+META-INF/
+com/formdev/
 
-# Temp files
-*.bak
-*.log
-temp/
-
-*.zip
-/com/
-/META-INF/
-/dist/Studio/app/com/
-/dist/Studio/app/dist/
-/build/
+# === Maven wrapper ===
+.mvn/
+mvnw
+mvnw.cmd

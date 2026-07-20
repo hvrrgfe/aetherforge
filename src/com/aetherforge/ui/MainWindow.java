@@ -1,5 +1,6 @@
 package com.aetherforge.ui;
 
+import com.aetherforge.model.Entity;
 import com.aetherforge.model.Scene;
 import com.aetherforge.model.SceneListener;
 import com.aetherforge.util.Colors;
@@ -11,6 +12,8 @@ import java.awt.event.*;
 import java.awt.image.BufferedImage;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
+import java.io.*;
+import javax.swing.filechooser.FileNameExtensionFilter;
 
 /**
  * AetherForge Studio 主窗口 — 精简协调器
@@ -82,6 +85,33 @@ public class MainWindow extends JFrame implements SceneListener {
         tb.setBackground(Colors.BACKGROUND_DARK);
         // ... using the titleBar from LayoutBuilder
         tb = titleBar;
+
+        // 汉堡菜单按钮
+        JButton menuBtn = new JButton("\u2630");
+        menuBtn.setFont(UIManager.getFont("defaultFont").deriveFont(Font.PLAIN, 14f));
+        menuBtn.setFocusPainted(false); menuBtn.setBorderPainted(false);
+        menuBtn.setContentAreaFilled(false);
+        menuBtn.setForeground(Colors.TEXT_SECONDARY);
+        menuBtn.setPreferredSize(new Dimension(36, LayoutBuilder.DP40));
+        menuBtn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        JPopupMenu fileMenu = new JPopupMenu();
+        fileMenu.setBackground(Colors.BACKGROUND_RAISED);
+        fileMenu.setBorder(BorderFactory.createLineBorder(Colors.BORDER_LINE));
+
+        JMenuItem saveItem = new JMenuItem(I18n.get("app.title") + " - Save (Ctrl+S)");
+        saveItem.setForeground(Colors.TEXT_PRIMARY);
+        saveItem.setBackground(Colors.BACKGROUND_RAISED);
+        saveItem.addActionListener(e -> saveScene());
+        fileMenu.add(saveItem);
+
+        JMenuItem loadItem = new JMenuItem(I18n.get("app.title") + " - Open (Ctrl+O)");
+        loadItem.setForeground(Colors.TEXT_PRIMARY);
+        loadItem.setBackground(Colors.BACKGROUND_RAISED);
+        loadItem.addActionListener(e -> loadScene());
+        fileMenu.add(loadItem);
+
+        menuBtn.addActionListener(e -> fileMenu.show(menuBtn, 0, menuBtn.getHeight()));
+        titleBar.add(menuBtn, BorderLayout.WEST);
 
         // 左：场景树
         JPanel leftPanel = LayoutBuilder.createPanelWithHeader("panel.explorer",
@@ -171,6 +201,10 @@ public class MainWindow extends JFrame implements SceneListener {
     private void setupKeyboard() {
         InputMap im = getRootPane().getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW);
         ActionMap am = getRootPane().getActionMap();
+        im.put(KeyStroke.getKeyStroke(KeyEvent.VK_S, InputEvent.CTRL_DOWN_MASK), "save");
+        am.put("save", new AbstractAction() { public void actionPerformed(ActionEvent e) { saveScene(); } });
+        im.put(KeyStroke.getKeyStroke(KeyEvent.VK_O, InputEvent.CTRL_DOWN_MASK), "open");
+        am.put("open", new AbstractAction() { public void actionPerformed(ActionEvent e) { loadScene(); } });
         im.put(KeyStroke.getKeyStroke(KeyEvent.VK_N, InputEvent.CTRL_DOWN_MASK), "newE");
         am.put("newE", new AbstractAction() { public void actionPerformed(ActionEvent e) { sceneController.createEntity(); } });
         im.put(KeyStroke.getKeyStroke(KeyEvent.VK_Z, InputEvent.CTRL_DOWN_MASK), "undo");
@@ -271,6 +305,46 @@ public class MainWindow extends JFrame implements SceneListener {
             normalWidth = getWidth(); normalHeight = getHeight();
             setBounds(bounds);
             isMaximized = true;
+        }
+    }
+
+    // ═══════════════════════════════════════════════════════════
+    //  文件操作
+    // ═══════════════════════════════════════════════════════════
+
+    private void saveScene() {
+        JFileChooser fc = new JFileChooser();
+        fc.setDialogTitle(I18n.get("scene.root") + " - " + I18n.get("panel.properties"));
+        fc.setFileFilter(new FileNameExtensionFilter("AetherForge Scene (*.json)", "json"));
+        fc.setSelectedFile(new java.io.File("scene.json"));
+        if (fc.showSaveDialog(this) == JFileChooser.APPROVE_OPTION) {
+            try (PrintWriter pw = new PrintWriter(fc.getSelectedFile(), "UTF-8")) {
+                pw.write(scene.toJson());
+                scene.fireLog("Scene saved");
+            } catch (IOException ex) {
+                JOptionPane.showMessageDialog(this, "Save failed: " + ex.getMessage(),
+                    "Error", JOptionPane.ERROR_MESSAGE);
+            }
+        }
+    }
+
+    private void loadScene() {
+        JFileChooser fc = new JFileChooser();
+        fc.setDialogTitle(I18n.get("scene.root") + " - " + I18n.get("statusbar.ready"));
+        fc.setFileFilter(new FileNameExtensionFilter("AetherForge Scene (*.json)", "json"));
+        if (fc.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
+            try {
+                String json = new String(java.nio.file.Files.readAllBytes(fc.getSelectedFile().toPath()), "UTF-8");
+                Scene loaded = Scene.fromJson(json);
+                // Replace scene contents
+                scene.getEntities().clear();
+                for (Entity e : loaded.getEntities()) scene.addEntity(e);
+                scene.fireChange();
+                scene.fireLog("Scene loaded");
+            } catch (IOException ex) {
+                JOptionPane.showMessageDialog(this, "Load failed: " + ex.getMessage(),
+                    "Error", JOptionPane.ERROR_MESSAGE);
+            }
         }
     }
 
