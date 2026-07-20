@@ -170,7 +170,7 @@ public class ViewportPanel extends JPanel {
             g2.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, alpha));
             g2.setColor(Colors.TEXT_SECONDARY);
             float fs = Math.max(9, (int)(11*Math.min(1,zoom)));
-            g2.setFont(new Font("Segoe UI", Font.PLAIN, (int)fs));
+            g2.setFont(UIManager.getFont("defaultFont").deriveFont(Font.PLAIN, fs));
             FontMetrics fm = g2.getFontMetrics();
             int tw = fm.stringWidth(entity.getName());
             g2.drawString(entity.getName(), (int)(sx - tw/2.0),
