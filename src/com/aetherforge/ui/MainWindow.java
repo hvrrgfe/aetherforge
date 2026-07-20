@@ -29,6 +29,7 @@ public class MainWindow extends JFrame implements SceneListener {
     private JLabel statusLabel;
     private JTextArea consoleArea = null;
     private JButton langBtn = null, themeBtn = null;
+    private JMenuItem saveItem, loadItem, newItem, aboutItem;
     private boolean isMaximized;
     private int normalX, normalY, normalWidth, normalHeight;
 
@@ -95,25 +96,37 @@ public class MainWindow extends JFrame implements SceneListener {
         fileMenu.setBackground(Colors.bgRaised());
         fileMenu.setBorder(BorderFactory.createLineBorder(Colors.borderLine()));
 
-        JMenuItem saveItem = new JMenuItem(I18n.get("app.title") + " - Save (Ctrl+S)");
+        saveItem = new JMenuItem();
         saveItem.setForeground(Colors.textPrimary());
         saveItem.setBackground(Colors.bgRaised());
         saveItem.addActionListener(e -> saveScene());
         fileMenu.add(saveItem);
 
-        JMenuItem loadItem = new JMenuItem(I18n.get("app.title") + " - Open (Ctrl+O)");
+        loadItem = new JMenuItem();
         loadItem.setForeground(Colors.textPrimary());
         loadItem.setBackground(Colors.bgRaised());
         loadItem.addActionListener(e -> loadScene());
         fileMenu.add(loadItem);
         fileMenu.addSeparator();
-        JMenuItem newItem = new JMenuItem(I18n.get("tree.new") + " Scene (Ctrl+Shift+N)");
+        newItem = new JMenuItem();
         newItem.setForeground(Colors.textPrimary());
         newItem.setBackground(Colors.bgRaised());
         newItem.addActionListener(e -> newScene());
         fileMenu.add(newItem);
+        fileMenu.addSeparator();
+        aboutItem = new JMenuItem();
+        aboutItem.setForeground(Colors.textPrimary());
+        aboutItem.setBackground(Colors.bgRaised());
+        aboutItem.addActionListener(e -> showAbout());
+        fileMenu.add(aboutItem);
 
-        menuBtn.addActionListener(e -> fileMenu.show(menuBtn, 0, menuBtn.getHeight()));
+        menuBtn.addActionListener(e -> {
+            saveItem.setText(I18n.get("tree.new") + " (Ctrl+S)");
+            loadItem.setText(I18n.get("inspector.name") + " (Ctrl+O)");
+            newItem.setText(I18n.get("app.title") + " (Ctrl+Shift+N)");
+            aboutItem.setText(I18n.get("app.title"));
+            fileMenu.show(menuBtn, 0, menuBtn.getHeight());
+        });
 
         JPanel tb = LayoutBuilder.createTitleBar(drag,
             () -> setState(JFrame.ICONIFIED),
@@ -418,5 +431,17 @@ public class MainWindow extends JFrame implements SceneListener {
         else if (d==(R_N|R_W)||d==(R_S|R_E)) c=Cursor.NW_RESIZE_CURSOR;
         else if (d==(R_N|R_E)||d==(R_S|R_W)) c=Cursor.NE_RESIZE_CURSOR;
         setCursor(Cursor.getPredefinedCursor(c));
+    }
+
+    private void showAbout() {
+        ImageIcon icon = new ImageIcon(createIcon());
+        JOptionPane.showMessageDialog(this,
+            "AetherForge Studio v1.2.0\n" +
+            "2D Game Engine Editor\n\n" +
+            "Built with Java + FlatLaf\n" +
+            "github.com/hvrrgfe/aetherforge",
+            I18n.get("app.title"),
+            JOptionPane.INFORMATION_MESSAGE,
+            icon);
     }
 }

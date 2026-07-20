@@ -71,6 +71,10 @@ public final class I18n {
         put("entity.new",         "新实体",             "New Entity");
         put("status.ready",       "  就绪",                  "Ready");
         put("theme.dracula",     "紫黑",                          "Dracula");
+        put("log.undo",          "撤销",                          "Undo");
+        put("log.redo",          "重做",                          "Redo");
+        put("log.saved",         "已保存",                          "Scene saved");
+        put("log.loaded2",       "已加载",                          "Scene loaded");
     }
 
     private static void put(String key, String zh, String en) {

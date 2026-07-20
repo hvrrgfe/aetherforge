@@ -30,6 +30,8 @@ public class ViewportPanel extends JPanel implements SceneListener {
     private static final long FADE_MS = 200;
     private boolean snapEnabled = true;
     private Timer animTimer;
+    private double targetCamX, targetCamY, targetCamZoom;
+    private boolean cameraAnimating;
 
     public ViewportPanel(Scene scene) {
         this.scene = scene;
@@ -69,6 +71,38 @@ public class ViewportPanel extends JPanel implements SceneListener {
         return true;
     }
 
+    private double getEffectiveZoom() {
+        return cameraAnimating ? targetCamZoom : scene.getCameraZoom();
+    }
+
+    private double getEffectiveCamX() {
+        return cameraAnimating ? targetCamX : scene.getCameraX();
+    }
+
+    private double getEffectiveCamY() {
+        return cameraAnimating ? targetCamY : scene.getCameraY();
+    }
+
+    private void updateCameraAnimation() {
+        if (!cameraAnimating) return;
+        double dx = scene.getCameraX() - targetCamX;
+        double dy = scene.getCameraY() - targetCamY;
+        double dz = scene.getCameraZoom() - targetCamZoom;
+        double dist = Math.sqrt(dx*dx + dy*dy + dz*dz * 100);
+        if (dist < 1.0) {
+            cameraAnimating = false;
+            return;
+        }
+        double speed = 0.12;
+        targetCamX += dx * speed;
+        targetCamY += dy * speed;
+        targetCamZoom += dz * speed;
+    }
+
+    public void smoothMoveCamera(double dx, double dy) {
+        scene.moveCamera(-dx / scene.getCameraZoom(), -dy / scene.getCameraZoom());
+    }
+
     private void startAnimTimer() {
         if (animTimer != null && animTimer.isRunning()) animTimer.stop();
         animTimer = new Timer(16, e -> {
@@ -84,6 +118,7 @@ public class ViewportPanel extends JPanel implements SceneListener {
                 if (now - fadeStartTime < FADE_MS) keepGoing = true;
                 else fadingOut = null;
             }
+            if (cameraAnimating) keepGoing = true;
             repaint();
             if (!keepGoing) animTimer.stop();
         });
@@ -105,9 +140,10 @@ public class ViewportPanel extends JPanel implements SceneListener {
         g2.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
 
         int w = getWidth(), h = getHeight();
-        double zoom = scene.getCameraZoom();
-        double camX = scene.getCameraX();
-        double camY = scene.getCameraY();
+        double zoom = getEffectiveZoom();
+        double camX = getEffectiveCamX();
+        double camY = getEffectiveCamY();
+        updateCameraAnimation();
         long now = System.currentTimeMillis();
 
         drawGrid(g2, w, h, zoom, camX, camY);
@@ -227,6 +263,11 @@ public class ViewportPanel extends JPanel implements SceneListener {
         @Override
         public void mousePressed(MouseEvent e) {
             requestFocusInWindow();
+            if (e.getClickCount() == 2 && dragEntity == null) {
+                scene.resetCamera();
+                cameraAnimating = false;
+                return;
+            }
             double wx = (e.getX() - getWidth() / 2.0) / scene.getCameraZoom() - scene.getCameraX();
             double wy = (e.getY() - getHeight() / 2.0) / scene.getCameraZoom() - scene.getCameraY();
             Entity hit = null;
@@ -258,8 +299,7 @@ public class ViewportPanel extends JPanel implements SceneListener {
                 }
                 dragOffsetX = e.getX(); dragOffsetY = e.getY();
             } else if (dragStart != null) {
-                scene.moveCamera(-(e.getX() - dragStart.x) / scene.getCameraZoom(),
-                    -(e.getY() - dragStart.y) / scene.getCameraZoom());
+                smoothMoveCamera(e.getX() - dragStart.x, e.getY() - dragStart.y);
                 dragStart = e.getPoint();
             }
             repaint();
