@@ -1,0 +1,54 @@
+package com.aetherforge.util;
+
+import java.awt.Color;
+
+/**
+ * 颜色常量（支持主题切换 — 调用 updateTheme() 刷新）
+ */
+public final class Colors {
+    private Colors() {}
+
+    // 背景色
+    public static Color BACKGROUND_DEEPEST   = new Color(0x0a, 0x0a, 0x0a);
+    public static Color BACKGROUND_DARK      = new Color(0x12, 0x12, 0x12);
+    public static Color BACKGROUND_PANEL     = new Color(0x18, 0x18, 0x18);
+    public static Color BACKGROUND_RAISED    = new Color(0x20, 0x20, 0x20);
+    public static Color BACKGROUND_HOVER     = new Color(0x28, 0x28, 0x28);
+    public static Color BACKGROUND_INPUT     = new Color(0x0c, 0x0c, 0x0c);
+
+    // 文字色
+    public static Color TEXT_PRIMARY     = new Color(0xe8, 0xe8, 0xe8);
+    public static Color TEXT_SECONDARY   = new Color(0x99, 0x99, 0x99);
+    public static Color TEXT_MUTED       = new Color(0x55, 0x55, 0x55);
+
+    // 边框和网格
+    public static Color BORDER_LINE = new Color(0x20, 0x20, 0x20);
+    public static Color GRID_LINE   = new Color(0x14, 0x14, 0x14);
+    public static Color ORIGIN_LINE = new Color(0x2a, 0x2a, 0x2a);
+
+    // 固定色
+    public static final Color BLUE   = new Color(0x40, 0x80, 0xf0);
+    public static final Color GREEN  = new Color(0x40, 0xd0, 0x80);
+    public static final Color RED    = new Color(0xf0, 0x40, 0x70);
+    public static final Color ORANGE = new Color(0xf0, 0xa0, 0x40);
+    public static final Color RESIZE_HANDLE  = new Color(0x33, 0x33, 0x33);
+    public static final Color GLOW_OUTER     = new Color(0x40, 0x80, 0xf0, 40);
+    public static final Color GLOW_INNER     = new Color(0x40, 0x80, 0xf0, 80);
+    public static final Color HOVER_OVERLAY  = new Color(0x40, 0x80, 0xf0, 30);
+
+    /** 根据 Theme 刷新所有动态颜色 */
+    public static void updateTheme() {
+        BACKGROUND_DEEPEST = Theme.bg0();
+        BACKGROUND_DARK    = Theme.bg1();
+        BACKGROUND_PANEL   = Theme.bg2();
+        BACKGROUND_RAISED  = Theme.bg3();
+        BACKGROUND_HOVER   = Theme.bg4();
+        BACKGROUND_INPUT   = Theme.inputBg();
+        TEXT_PRIMARY   = Theme.text1();
+        TEXT_SECONDARY = Theme.text2();
+        TEXT_MUTED     = Theme.text3();
+        BORDER_LINE = Theme.border();
+        GRID_LINE   = Theme.grid();
+        ORIGIN_LINE = Theme.origin();
+    }
+}
