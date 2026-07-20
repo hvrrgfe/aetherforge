@@ -125,6 +125,7 @@ public class Scene {
     public void executeCommand(Command cmd) {
         cmd.execute();
         undoStack.addLast(cmd);
+        if (undoStack.size() > MAX_UNDO) undoStack.removeFirst();
         redoStack.clear();
         fireChange();
         fireLog(cmd.getName());
@@ -136,6 +137,7 @@ public class Scene {
         cmd.undo();
         redoStack.addLast(cmd);
         fireChange();
+        fireSelection();
         fireLog(I18n.get("log.undo") + ": " + cmd.getName());
     }
 
@@ -145,6 +147,7 @@ public class Scene {
         cmd.execute();
         undoStack.addLast(cmd);
         fireChange();
+        fireSelection();
         fireLog(I18n.get("log.redo") + ": " + cmd.getName());
     }
 

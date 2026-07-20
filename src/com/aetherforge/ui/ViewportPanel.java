@@ -33,7 +33,7 @@ public class ViewportPanel extends JPanel implements SceneListener {
 
     public ViewportPanel(Scene scene) {
         this.scene = scene;
-        setBackground(Colors.BACKGROUND_DEEPEST);
+        setBackground(Colors.bgDeepest());
         setFocusable(true);
         setCursor(Cursor.getPredefinedCursor(Cursor.CROSSHAIR_CURSOR));
 
@@ -160,7 +160,7 @@ public class ViewportPanel extends JPanel implements SceneListener {
             g2.setColor(entity.getColor());
             g2.fillOval((int)(sx - dw/2), (int)(sy - dh/2), (int)dw, (int)dh);
             if (entity.isPlayer()) {
-                g2.setColor(Colors.BACKGROUND_DEEPEST);
+                g2.setColor(Colors.bgDeepest());
                 g2.fillOval((int)(sx - dw/4), (int)(sy - dh/4), (int)(dw/4), (int)(dh/4));
             }
         } else {
@@ -170,7 +170,7 @@ public class ViewportPanel extends JPanel implements SceneListener {
 
         if (zoom > 0.3) {
             g2.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, alpha * 0.7f));
-            g2.setColor(Colors.TEXT_SECONDARY);
+            g2.setColor(Colors.textSecondary());
             float fs = Math.max(9, (int)(11 * Math.min(1, zoom)));
             g2.setFont(UIManager.getFont("defaultFont").deriveFont(Font.PLAIN, fs));
             FontMetrics fm = g2.getFontMetrics();
@@ -180,7 +180,7 @@ public class ViewportPanel extends JPanel implements SceneListener {
     }
 
     private void drawGrid(Graphics2D g2, int w, int h, double zoom, double camX, double camY) {
-        g2.setColor(Colors.GRID_LINE);
+        g2.setColor(Colors.gridLine());
         float gs = 32, sg = (float)(gs * zoom);
         if (sg < 4) sg = 4;
         double ox = (w / 2.0 + camX * zoom) % sg;
@@ -192,7 +192,7 @@ public class ViewportPanel extends JPanel implements SceneListener {
     private void drawOrigin(Graphics2D g2, int w, int h, double zoom, double camX, double camY) {
         int ox = (int)(w/2.0 + camX * zoom);
         int oy = (int)(h/2.0 + camY * zoom);
-        g2.setColor(Colors.ORIGIN_LINE);
+        g2.setColor(Colors.originLine());
         g2.drawLine(ox - 20, oy, ox + 20, oy);
         g2.drawLine(ox, oy - 20, ox, oy + 20);
         g2.setColor(Colors.BLUE);
@@ -214,9 +214,9 @@ public class ViewportPanel extends JPanel implements SceneListener {
 
     private void drawViewportHUD(Graphics2D g2, int w, int h, double zoom, double camX, double camY) {
         g2.setFont(UIManager.getFont("defaultFont").deriveFont(Font.PLAIN, 11f));
-        g2.setColor(Colors.TEXT_MUTED);
+        g2.setColor(Colors.textMuted());
         g2.drawString(String.format("%.0f%%%s", zoom * 100, snapEnabled ? "" : " NS"), w - 75, h - 14);
-        g2.setColor(Colors.BORDER_LINE);
+        g2.setColor(Colors.borderLine());
         g2.fillRect(w - 55, h - 28, 40, 3);
         g2.setColor(Colors.BLUE);
         int fill = (int)(40 * Math.min(1, Math.max(0.05, zoom) / 20.0));

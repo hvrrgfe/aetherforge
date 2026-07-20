@@ -6,8 +6,8 @@ import java.awt.*;
 
 public class DarkScrollBarUI extends BasicScrollBarUI {
     @Override protected void configureScrollBarColors() {
-        thumbColor = Colors.BACKGROUND_HOVER;
-        trackColor = Colors.BACKGROUND_DEEPEST;
+        thumbColor = Colors.bgHover();
+        trackColor = Colors.bgDeepest();
     }
     @Override protected JButton createDecreaseButton(int o) { return zero(); }
     @Override protected JButton createIncreaseButton(int o) { return zero(); }

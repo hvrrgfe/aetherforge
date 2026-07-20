@@ -2,6 +2,8 @@ package com.aetherforge.util;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.List;
+import java.util.ArrayList;
 import java.util.function.Consumer;
 
 /**
@@ -12,7 +14,7 @@ public final class I18n {
 
     public enum Lang { CHINESE, ENGLISH }
     private static Lang currentLang = Lang.CHINESE;
-    private static Consumer<Lang> listener;
+    private static final List<Consumer<Lang>> listeners = new ArrayList<>();
 
     private static final Map<String, String> ZH = new HashMap<>();
     private static final Map<String, String> EN = new HashMap<>();
@@ -85,7 +87,7 @@ public final class I18n {
 
     public static void setLang(Lang lang) {
         currentLang = lang;
-        if (listener != null) listener.accept(lang);
+        for (Consumer<Lang> l : listeners) l.accept(lang);
     }
 
     public static void toggle() {
@@ -93,5 +95,5 @@ public final class I18n {
     }
 
     /** 注册语言变更回调（用于刷新 UI） */
-    public static void setChangeListener(Consumer<Lang> l) { listener = l; }
+    public static void addChangeListener(Consumer<Lang> l) { listeners.add(l); }
 }

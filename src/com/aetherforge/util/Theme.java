@@ -2,6 +2,8 @@ package com.aetherforge.util;
 
 import java.awt.Color;
 import java.awt.Font;
+import java.util.List;
+import java.util.ArrayList;
 import java.util.function.Consumer;
 import javax.swing.*;
 import com.formdev.flatlaf.FlatDarkLaf;
@@ -16,7 +18,7 @@ public final class Theme {
 
     public enum Profile { DARK, LIGHT, DRACULA }
     private static Profile current = Profile.DARK;
-    private static Consumer<Profile> listener;
+    private static final List<Consumer<Profile>> listeners = new ArrayList<>();
 
     // ─── 暗色主题（Codex 风格，默认） ───
     public static final class Dark {
@@ -110,7 +112,7 @@ public final class Theme {
         } catch (Exception e) {
             System.err.println("[Theme] Failed to set theme: " + e.getMessage());
         }
-        if (listener != null) listener.accept(p);
+        for (Consumer<Profile> l : listeners) l.accept(p);
     }
 
     public static void toggle() {
@@ -118,7 +120,7 @@ public final class Theme {
         setTheme(values[(current.ordinal() + 1) % values.length]);
     }
 
-    public static void setChangeListener(Consumer<Profile> l) { listener = l; }
+    public static void addChangeListener(Consumer<Profile> l) { listeners.add(l); }
 
     /** 应用 CJK 兼容字体（覆盖 FlatLaf 的默认字体） */
     private static void applyCJKFont() {

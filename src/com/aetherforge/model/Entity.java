@@ -46,6 +46,14 @@ public class Entity {
     public void setPosition(double x, double y) { this.x = x; this.y = y; }
 
     public boolean containsPoint(double px, double py) {
+        if (isCircle) {
+            // 圆形：距离半径检查
+            double dx = px - x;
+            double dy = py - y;
+            double r = Math.min(width, height) / 2.0;
+            return dx * dx + dy * dy <= r * r;
+        }
+        // 矩形：AABB 检查
         return px >= x - width/2 && px <= x + width/2
             && py >= y - height/2 && py <= y + height/2;
     }

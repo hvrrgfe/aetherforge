@@ -8,23 +8,23 @@ import java.awt.Color;
 public final class Colors {
     private Colors() {}
 
-    // 背景色
-    public static Color BACKGROUND_DEEPEST   = new Color(0x0a, 0x0a, 0x0a);
-    public static Color BACKGROUND_DARK      = new Color(0x12, 0x12, 0x12);
-    public static Color BACKGROUND_PANEL     = new Color(0x18, 0x18, 0x18);
-    public static Color BACKGROUND_RAISED    = new Color(0x20, 0x20, 0x20);
-    public static Color BACKGROUND_HOVER     = new Color(0x28, 0x28, 0x28);
-    public static Color BACKGROUND_INPUT     = new Color(0x0c, 0x0c, 0x0c);
+    // 背景色（通过 updateTheme() 修改）
+    private static Color BACKGROUND_DEEPEST   = new Color(0x0a, 0x0a, 0x0a);
+    private static Color BACKGROUND_DARK      = new Color(0x12, 0x12, 0x12);
+    private static Color BACKGROUND_PANEL     = new Color(0x18, 0x18, 0x18);
+    private static Color BACKGROUND_RAISED    = new Color(0x20, 0x20, 0x20);
+    private static Color BACKGROUND_HOVER     = new Color(0x28, 0x28, 0x28);
+    private static Color BACKGROUND_INPUT     = new Color(0x0c, 0x0c, 0x0c);
 
     // 文字色
-    public static Color TEXT_PRIMARY     = new Color(0xe8, 0xe8, 0xe8);
-    public static Color TEXT_SECONDARY   = new Color(0x99, 0x99, 0x99);
-    public static Color TEXT_MUTED       = new Color(0x55, 0x55, 0x55);
+    private static Color TEXT_PRIMARY     = new Color(0xe8, 0xe8, 0xe8);
+    private static Color TEXT_SECONDARY   = new Color(0x99, 0x99, 0x99);
+    private static Color TEXT_MUTED       = new Color(0x55, 0x55, 0x55);
 
     // 边框和网格
-    public static Color BORDER_LINE = new Color(0x20, 0x20, 0x20);
-    public static Color GRID_LINE   = new Color(0x14, 0x14, 0x14);
-    public static Color ORIGIN_LINE = new Color(0x2a, 0x2a, 0x2a);
+    private static Color BORDER_LINE = new Color(0x20, 0x20, 0x20);
+    private static Color GRID_LINE   = new Color(0x14, 0x14, 0x14);
+    private static Color ORIGIN_LINE = new Color(0x2a, 0x2a, 0x2a);
 
     // 实体颜色调色板（在 Inspector 和 Entity 之间共享）
     public static final Color[] ENTITY_PALETTE = {
@@ -63,4 +63,18 @@ public final class Colors {
         GRID_LINE   = Theme.grid();
         ORIGIN_LINE = Theme.origin();
     }
+
+    // ─── Getters（工厂方法，不对外暴露可变字段） ───
+    public static Color bgDeepest()   { return BACKGROUND_DEEPEST; }
+    public static Color bgDark()      { return BACKGROUND_DARK; }
+    public static Color bgPanel()     { return BACKGROUND_PANEL; }
+    public static Color bgRaised()    { return BACKGROUND_RAISED; }
+    public static Color bgHover()     { return BACKGROUND_HOVER; }
+    public static Color bgInput()     { return BACKGROUND_INPUT; }
+    public static Color textPrimary()   { return TEXT_PRIMARY; }
+    public static Color textSecondary() { return TEXT_SECONDARY; }
+    public static Color textMuted()     { return TEXT_MUTED; }
+    public static Color borderLine()    { return BORDER_LINE; }
+    public static Color gridLine()      { return GRID_LINE; }
+    public static Color originLine()    { return ORIGIN_LINE; }
 }

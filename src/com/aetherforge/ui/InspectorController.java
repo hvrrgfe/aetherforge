@@ -23,7 +23,7 @@ public class InspectorController implements com.aetherforge.model.SceneListener 
         this.scene = scene;
         this.panel = new JPanel();
         panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
-        panel.setBackground(Colors.BACKGROUND_DEEPEST);
+        panel.setBackground(Colors.bgDeepest());
         scene.addListener(this);
     }
 
@@ -46,7 +46,7 @@ public class InspectorController implements com.aetherforge.model.SceneListener 
         if (sel == null) {
             JLabel empty = new JLabel("  " + I18n.get("inspector.empty"));
             empty.setFont(UIManager.getFont("defaultFont").deriveFont(Font.PLAIN, 12f));
-            empty.setForeground(Colors.TEXT_MUTED);
+            empty.setForeground(Colors.textMuted());
             empty.setBorder(new EmptyBorder(DP10, DP10, DP10, DP10));
             panel.add(empty);
         } else {
@@ -83,27 +83,27 @@ public class InspectorController implements com.aetherforge.model.SceneListener 
     private void addTitle(String text) {
         JLabel l = new JLabel("  " + text);
         l.setFont(UIManager.getFont("defaultFont").deriveFont(Font.BOLD, 12f));
-        l.setForeground(Colors.TEXT_PRIMARY);
+        l.setForeground(Colors.textPrimary());
         l.setBorder(new EmptyBorder(DP8, DP8, DP4, DP8));
         panel.add(l);
         JSeparator sep = new JSeparator();
-        sep.setForeground(Colors.BORDER_LINE);
-        sep.setBackground(Colors.BORDER_LINE);
+        sep.setForeground(Colors.borderLine());
+        sep.setBackground(Colors.borderLine());
         panel.add(sep);
     }
 
     private void addRow(String label, String value) {
         JPanel row = new JPanel(new BorderLayout());
-        row.setBackground(Colors.BACKGROUND_DEEPEST);
+        row.setBackground(Colors.bgDeepest());
         row.setBorder(new EmptyBorder(DP4, DP12, DP4, DP12));
         row.setMaximumSize(new Dimension(9999, 24));
         JLabel l = new JLabel(label);
         l.setFont(UIManager.getFont("defaultFont").deriveFont(Font.PLAIN, 11f));
-        l.setForeground(Colors.TEXT_MUTED);
+        l.setForeground(Colors.textMuted());
         l.setPreferredSize(new Dimension(60, 16));
         JLabel v = new JLabel(value);
         v.setFont(UIManager.getFont("defaultFont").deriveFont(Font.PLAIN, 11f));
-        v.setForeground(Colors.TEXT_PRIMARY);
+        v.setForeground(Colors.textPrimary());
         row.add(l, BorderLayout.WEST);
         row.add(v, BorderLayout.CENTER);
         panel.add(row);
@@ -112,7 +112,7 @@ public class InspectorController implements com.aetherforge.model.SceneListener 
     private void addSection(String text) {
         JLabel l = new JLabel("  " + text);
         l.setFont(UIManager.getFont("defaultFont").deriveFont(Font.BOLD, 10f));
-        l.setForeground(Colors.TEXT_MUTED);
+        l.setForeground(Colors.textMuted());
         panel.add(l);
     }
 
@@ -121,20 +121,20 @@ public class InspectorController implements com.aetherforge.model.SceneListener 
 
     private void addEditField(String label, double value, ValueSetter setter) {
         JPanel row = new JPanel(new BorderLayout());
-        row.setBackground(Colors.BACKGROUND_DEEPEST);
+        row.setBackground(Colors.bgDeepest());
         row.setBorder(new EmptyBorder(1, DP10, 1, DP10));
         row.setMaximumSize(new Dimension(9999, 24));
         JLabel l = new JLabel(label);
         l.setFont(UIManager.getFont("defaultFont").deriveFont(Font.PLAIN, 11f));
-        l.setForeground(Colors.TEXT_MUTED);
+        l.setForeground(Colors.textMuted());
         l.setPreferredSize(new Dimension(60, 18));
         JTextField field = new JTextField(String.valueOf((int) value));
         field.setFont(UIManager.getFont("defaultFont").deriveFont(Font.PLAIN, 11f));
-        field.setForeground(Colors.TEXT_PRIMARY);
-        field.setBackground(Colors.BACKGROUND_DARK);
+        field.setForeground(Colors.textPrimary());
+        field.setBackground(Colors.bgDark());
         field.setCaretColor(Colors.BLUE);
         field.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createLineBorder(Colors.BORDER_LINE, 1), new EmptyBorder(1, DP4, 1, DP4)));
+            BorderFactory.createLineBorder(Colors.borderLine(), 1), new EmptyBorder(1, DP4, 1, DP4)));
         field.setCursor(Cursor.getPredefinedCursor(Cursor.TEXT_CURSOR));
 
         // FocusLost + Enter validation (not per-keystroke)
@@ -149,7 +149,7 @@ public class InspectorController implements com.aetherforge.model.SceneListener 
             public void keyReleased(java.awt.event.KeyEvent e) {
                 try {
                     Double.parseDouble(field.getText());
-                    field.setForeground(Colors.TEXT_PRIMARY);
+                    field.setForeground(Colors.textPrimary());
                 } catch (NumberFormatException ex) {
                     field.setForeground(Colors.RED);
                 }
@@ -165,7 +165,7 @@ public class InspectorController implements com.aetherforge.model.SceneListener 
         try {
             double v = Double.parseDouble(field.getText().trim());
             setter.set(v);
-            field.setForeground(Colors.TEXT_PRIMARY);
+            field.setForeground(Colors.textPrimary());
             field.setText(String.valueOf((int) v));
         } catch (NumberFormatException e) {
             field.setForeground(Colors.RED);
@@ -177,20 +177,20 @@ public class InspectorController implements com.aetherforge.model.SceneListener 
 
     private void addStringField(String label, String value, StringSetter setter) {
         JPanel row = new JPanel(new BorderLayout());
-        row.setBackground(Colors.BACKGROUND_DEEPEST);
+        row.setBackground(Colors.bgDeepest());
         row.setBorder(new EmptyBorder(1, DP10, 1, DP10));
         row.setMaximumSize(new Dimension(9999, 24));
         JLabel l = new JLabel(label);
         l.setFont(UIManager.getFont("defaultFont").deriveFont(Font.PLAIN, 11f));
-        l.setForeground(Colors.TEXT_MUTED);
+        l.setForeground(Colors.textMuted());
         l.setPreferredSize(new Dimension(60, 18));
         JTextField field = new JTextField(value);
         field.setFont(UIManager.getFont("defaultFont").deriveFont(Font.PLAIN, 11f));
-        field.setForeground(Colors.TEXT_PRIMARY);
-        field.setBackground(Colors.BACKGROUND_DARK);
+        field.setForeground(Colors.textPrimary());
+        field.setBackground(Colors.bgDark());
         field.setCaretColor(Colors.BLUE);
         field.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createLineBorder(Colors.BORDER_LINE, 1), new EmptyBorder(1, DP4, 1, DP4)));
+            BorderFactory.createLineBorder(Colors.borderLine(), 1), new EmptyBorder(1, DP4, 1, DP4)));
         field.addActionListener(e -> { setter.set(field.getText()); scene.fireChange(); });
         field.addFocusListener(new java.awt.event.FocusAdapter() {
             @Override public void focusLost(java.awt.event.FocusEvent e) { setter.set(field.getText()); scene.fireChange(); }
@@ -204,13 +204,13 @@ public class InspectorController implements com.aetherforge.model.SceneListener 
         java.awt.Color[] palette = com.aetherforge.util.Colors.ENTITY_PALETTE;
 
         JPanel row = new JPanel(new FlowLayout(FlowLayout.LEFT, 4, 2));
-        row.setBackground(Colors.BACKGROUND_DEEPEST);
+        row.setBackground(Colors.bgDeepest());
         row.setBorder(new EmptyBorder(4, DP10, 4, DP10));
         row.setMaximumSize(new Dimension(9999, 32));
 
         JLabel label = new JLabel(I18n.get("inspector.type") + " color");
         label.setFont(UIManager.getFont("defaultFont").deriveFont(Font.PLAIN, 11f));
-        label.setForeground(Colors.TEXT_MUTED);
+        label.setForeground(Colors.textMuted());
         label.setPreferredSize(new Dimension(60, 20));
         row.add(label);
 

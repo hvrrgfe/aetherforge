@@ -8,16 +8,16 @@ import com.aetherforge.util.I18n;
 public class DeleteEntityCommand implements Command {
     private final Scene scene;
     private final Entity entity;
-    private final int index;
+    private int index;
 
     public DeleteEntityCommand(Scene scene, Entity entity) {
         this.scene = scene;
         this.entity = entity;
-        this.index = scene.getEntities().indexOf(entity);
     }
 
     @Override
     public void execute() {
+        this.index = scene.getEntities().indexOf(entity);
         scene.removeEntity(entity);
     }
 

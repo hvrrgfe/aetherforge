@@ -18,7 +18,7 @@ public final class LayoutBuilder {
 
     public static JPanel buildContent(JPanel titleBar, JSplitPane mainSplit, JPanel statusBar) {
         JPanel content = new JPanel(new BorderLayout());
-        content.setBackground(Colors.BACKGROUND_DEEPEST);
+        content.setBackground(Colors.bgDeepest());
         content.add(titleBar, BorderLayout.NORTH);
         content.add(mainSplit, BorderLayout.CENTER);
         content.add(statusBar, BorderLayout.SOUTH);
@@ -32,9 +32,9 @@ public final class LayoutBuilder {
             protected void paintComponent(Graphics g) {
                 Graphics2D g2 = (Graphics2D) g.create();
                 g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                g2.setColor(Colors.BACKGROUND_DARK);
+                g2.setColor(Colors.bgDark());
                 g2.fillRect(0, 0, getWidth(), getHeight());
-                g2.setColor(Colors.BORDER_LINE);
+                g2.setColor(Colors.borderLine());
                 g2.fillRect(0, getHeight() - 1, getWidth(), 1);
                 g2.dispose();
             }
@@ -46,7 +46,7 @@ public final class LayoutBuilder {
         icon.setBorder(new EmptyBorder(0, DP12, 0, DP4));
         JLabel tl = new JLabel("AetherForge Studio");
         tl.setFont(UIManager.getFont("defaultFont").deriveFont(Font.PLAIN, 12f));
-        tl.setForeground(Colors.TEXT_SECONDARY);
+        tl.setForeground(Colors.textSecondary());
         left.add(icon); left.add(tl);
         titleBar.add(left, BorderLayout.WEST);
         JPanel right = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0, 0));
@@ -75,14 +75,14 @@ public final class LayoutBuilder {
                 Graphics2D g2 = (Graphics2D) g.create();
                 g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
                 if (getModel().isRollover()) {
-                    g2.setColor(type == TitleBtn.CLOSE ? new Color(0xe8,0x11,0x23) : Colors.BACKGROUND_HOVER);
+                    g2.setColor(type == TitleBtn.CLOSE ? new Color(0xe8,0x11,0x23) : Colors.bgHover());
                     g2.fillRect(0, 0, getWidth(), getHeight());
                 }
                 if (getModel().isPressed()) {
-                    g2.setColor(type == TitleBtn.CLOSE ? new Color(0xc0,0x0e,0x1a) : Colors.BACKGROUND_RAISED);
+                    g2.setColor(type == TitleBtn.CLOSE ? new Color(0xc0,0x0e,0x1a) : Colors.bgRaised());
                     g2.fillRect(0, 0, getWidth(), getHeight());
                 }
-                g2.setColor(type == TitleBtn.CLOSE && getModel().isRollover() ? Color.WHITE : Colors.TEXT_SECONDARY);
+                g2.setColor(type == TitleBtn.CLOSE && getModel().isRollover() ? Color.WHITE : Colors.textSecondary());
                 int cx = getWidth() / 2, cy = getHeight() / 2, sv = 10;
                 g2.setStroke(new BasicStroke(1.2f));
                 switch (type) {
@@ -103,14 +103,14 @@ public final class LayoutBuilder {
 
     public static JPanel createPanelWithHeader(String titleKey, JComponent body) {
         JPanel panel = new JPanel(new BorderLayout());
-        panel.setBackground(Colors.BACKGROUND_PANEL);
+        panel.setBackground(Colors.bgPanel());
         JPanel header = new JPanel(new BorderLayout());
-        header.setBackground(Colors.BACKGROUND_RAISED);
+        header.setBackground(Colors.bgRaised());
         header.setPreferredSize(new Dimension(0, DP28));
         header.setBorder(new EmptyBorder(0, DP10, 0, DP10));
         JLabel l = new JLabel(I18n.get(titleKey));
         l.setFont(UIManager.getFont("defaultFont").deriveFont(Font.BOLD, 10f));
-        l.setForeground(Colors.TEXT_MUTED);
+        l.setForeground(Colors.textMuted());
         header.add(l, BorderLayout.WEST);
         panel.add(header, BorderLayout.NORTH);
         panel.add(body, BorderLayout.CENTER);
@@ -121,13 +121,13 @@ public final class LayoutBuilder {
         JScrollPane sp = new JScrollPane(view);
         sp.setBorder(BorderFactory.createEmptyBorder());
         sp.getVerticalScrollBar().setUI(new DarkScrollBarUI());
-        sp.setBackground(Colors.BACKGROUND_PANEL);
+        sp.setBackground(Colors.bgPanel());
         return sp;
     }
 
     public static JPanel createViewportToolbar(Runnable onNew, Runnable onDelete) {
         JPanel toolbar = new JPanel(new FlowLayout(FlowLayout.LEFT, 2, 3));
-        toolbar.setBackground(Colors.BACKGROUND_RAISED);
+        toolbar.setBackground(Colors.bgRaised());
         toolbar.setPreferredSize(new Dimension(0, DP28));
         toolbar.setBorder(new EmptyBorder(0, DP4, 0, DP4));
         String[] names = {I18n.get("viewport.tool.select"), I18n.get("viewport.tool.move"), I18n.get("viewport.tool.scale")};
@@ -136,15 +136,15 @@ public final class LayoutBuilder {
             JToggleButton tb = new JToggleButton(names[i]);
             tb.setFont(UIManager.getFont("defaultFont").deriveFont(Font.PLAIN, 11f));
             tb.setFocusPainted(false); tb.setBorderPainted(false);
-            tb.setBackground(Colors.BACKGROUND_RAISED);
-            tb.setForeground(Colors.TEXT_SECONDARY);
+            tb.setBackground(Colors.bgRaised());
+            tb.setForeground(Colors.textSecondary());
             tb.setPreferredSize(new Dimension(52, 24));
             tb.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
             tb.setRolloverEnabled(true);
             if (i == 0) tb.setSelected(true);
             tb.addItemListener(e -> {
-                tb.setBackground(tb.isSelected() ? Colors.BACKGROUND_HOVER : Colors.BACKGROUND_RAISED);
-                tb.setForeground(tb.isSelected() ? Colors.BLUE : Colors.TEXT_SECONDARY);
+                tb.setBackground(tb.isSelected() ? Colors.bgHover() : Colors.bgRaised());
+                tb.setForeground(tb.isSelected() ? Colors.BLUE : Colors.textSecondary());
             });
             group.add(tb);
             toolbar.add(tb);
@@ -159,8 +159,8 @@ public final class LayoutBuilder {
         JButton btn = new JButton(text);
         btn.setFont(UIManager.getFont("defaultFont").deriveFont(Font.BOLD, 13f));
         btn.setFocusPainted(false); btn.setBorderPainted(false);
-        btn.setBackground(Colors.BACKGROUND_RAISED);
-        btn.setForeground(Colors.TEXT_SECONDARY);
+        btn.setBackground(Colors.bgRaised());
+        btn.setForeground(Colors.textSecondary());
         btn.setPreferredSize(new Dimension(24, 24));
         btn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
         btn.addActionListener(listener);
@@ -169,7 +169,7 @@ public final class LayoutBuilder {
 
     public static JPanel createStatusBar() {
         JPanel bar = new JPanel(new BorderLayout());
-        bar.setBackground(Colors.BACKGROUND_RAISED);
+        bar.setBackground(Colors.bgRaised());
         bar.setPreferredSize(new Dimension(0, DP24));
         return bar;
     }
@@ -177,7 +177,7 @@ public final class LayoutBuilder {
     public static JSplitPane splitH(JComponent left, JComponent right) {
         JSplitPane sp = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, left, right);
         sp.setBorder(BorderFactory.createEmptyBorder());
-        sp.setBackground(Colors.BACKGROUND_DEEPEST);
+        sp.setBackground(Colors.bgDeepest());
         sp.setDividerSize(2);
         sp.setResizeWeight(0);
         sp.setContinuousLayout(true);
@@ -187,7 +187,7 @@ public final class LayoutBuilder {
     public static JSplitPane splitV(JComponent top, JComponent bottom) {
         JSplitPane sp = new JSplitPane(JSplitPane.VERTICAL_SPLIT, top, bottom);
         sp.setBorder(BorderFactory.createEmptyBorder());
-        sp.setBackground(Colors.BACKGROUND_DEEPEST);
+        sp.setBackground(Colors.bgDeepest());
         sp.setDividerSize(2);
         sp.setResizeWeight(1.0);
         sp.setContinuousLayout(true);

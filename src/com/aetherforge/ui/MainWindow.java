@@ -52,7 +52,7 @@ public class MainWindow extends JFrame implements SceneListener {
     private void setupWindow() {
         setTitle("AetherForge Studio");
         setUndecorated(true);
-        setBackground(Colors.BACKGROUND_DEEPEST);
+        setBackground(Colors.bgDeepest());
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setSize(1400, 900);
         setMinimumSize(new Dimension(1000, 600));
@@ -66,7 +66,7 @@ public class MainWindow extends JFrame implements SceneListener {
         g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
         g.setColor(Colors.BLUE);
         g.fillPolygon(new int[]{32, 56, 32, 8}, new int[]{4, 32, 60, 32}, 4);
-        g.setColor(Colors.BACKGROUND_DEEPEST);
+        g.setColor(Colors.bgDeepest());
         g.fillPolygon(new int[]{32, 48, 32, 16}, new int[]{14, 32, 50, 32}, 4);
         g.dispose();
         return img;
@@ -85,28 +85,28 @@ public class MainWindow extends JFrame implements SceneListener {
         menuBtn.setFont(UIManager.getFont("defaultFont").deriveFont(Font.PLAIN, 14f));
         menuBtn.setFocusPainted(false); menuBtn.setBorderPainted(false);
         menuBtn.setContentAreaFilled(false);
-        menuBtn.setForeground(Colors.TEXT_SECONDARY);
+        menuBtn.setForeground(Colors.textSecondary());
         menuBtn.setPreferredSize(new Dimension(36, LayoutBuilder.DP40));
         menuBtn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
         JPopupMenu fileMenu = new JPopupMenu();
-        fileMenu.setBackground(Colors.BACKGROUND_RAISED);
-        fileMenu.setBorder(BorderFactory.createLineBorder(Colors.BORDER_LINE));
+        fileMenu.setBackground(Colors.bgRaised());
+        fileMenu.setBorder(BorderFactory.createLineBorder(Colors.borderLine()));
 
         JMenuItem saveItem = new JMenuItem(I18n.get("app.title") + " - Save (Ctrl+S)");
-        saveItem.setForeground(Colors.TEXT_PRIMARY);
-        saveItem.setBackground(Colors.BACKGROUND_RAISED);
+        saveItem.setForeground(Colors.textPrimary());
+        saveItem.setBackground(Colors.bgRaised());
         saveItem.addActionListener(e -> saveScene());
         fileMenu.add(saveItem);
 
         JMenuItem loadItem = new JMenuItem(I18n.get("app.title") + " - Open (Ctrl+O)");
-        loadItem.setForeground(Colors.TEXT_PRIMARY);
-        loadItem.setBackground(Colors.BACKGROUND_RAISED);
+        loadItem.setForeground(Colors.textPrimary());
+        loadItem.setBackground(Colors.bgRaised());
         loadItem.addActionListener(e -> loadScene());
         fileMenu.add(loadItem);
         fileMenu.addSeparator();
         JMenuItem newItem = new JMenuItem(I18n.get("tree.new") + " Scene (Ctrl+Shift+N)");
-        newItem.setForeground(Colors.TEXT_PRIMARY);
-        newItem.setBackground(Colors.BACKGROUND_RAISED);
+        newItem.setForeground(Colors.textPrimary());
+        newItem.setBackground(Colors.bgRaised());
         newItem.addActionListener(e -> newScene());
         fileMenu.add(newItem);
 
@@ -119,7 +119,7 @@ public class MainWindow extends JFrame implements SceneListener {
 
         // 中：视口 + 控制台
         JPanel centerPanel = new JPanel(new BorderLayout());
-        centerPanel.setBackground(Colors.BACKGROUND_DEEPEST);
+        centerPanel.setBackground(Colors.bgDeepest());
         centerPanel.add(LayoutBuilder.createViewportToolbar(
             () -> sceneController.createEntity(), () -> sceneController.deleteSelected()
         ), BorderLayout.NORTH);
@@ -127,8 +127,8 @@ public class MainWindow extends JFrame implements SceneListener {
 
         // 控制台
         JTextArea console = new JTextArea();
-        console.setBackground(Colors.BACKGROUND_DEEPEST);
-        console.setForeground(Colors.TEXT_SECONDARY);
+        console.setBackground(Colors.bgDeepest());
+        console.setForeground(Colors.textSecondary());
         console.setFont(UIManager.getFont("defaultFont").deriveFont(Font.PLAIN, 12f));
         console.setEditable(false);
         console.setBorder(BorderFactory.createEmptyBorder(4, 8, 4, 8));
@@ -167,7 +167,7 @@ public class MainWindow extends JFrame implements SceneListener {
         left.setOpaque(false);
         statusLabel = new JLabel("  " + I18n.get("status.ready"));
         statusLabel.setFont(UIManager.getFont("defaultFont").deriveFont(Font.PLAIN, 11f));
-        statusLabel.setForeground(Colors.TEXT_MUTED);
+        statusLabel.setForeground(Colors.textMuted());
         left.add(statusLabel);
         bar.add(left, BorderLayout.WEST);
 
@@ -177,7 +177,7 @@ public class MainWindow extends JFrame implements SceneListener {
         langBtn.setFont(UIManager.getFont("defaultFont").deriveFont(Font.PLAIN, 11f));
         langBtn.setFocusPainted(false); langBtn.setBorderPainted(false);
         langBtn.setContentAreaFilled(false);
-        langBtn.setForeground(Colors.TEXT_MUTED);
+        langBtn.setForeground(Colors.textMuted());
         langBtn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
         langBtn.addActionListener(e -> {
             I18n.toggle();
@@ -187,7 +187,7 @@ public class MainWindow extends JFrame implements SceneListener {
         themeBtn.setFont(UIManager.getFont("defaultFont").deriveFont(Font.PLAIN, 11f));
         themeBtn.setFocusPainted(false); themeBtn.setBorderPainted(false);
         themeBtn.setContentAreaFilled(false);
-        themeBtn.setForeground(Colors.TEXT_MUTED);
+        themeBtn.setForeground(Colors.textMuted());
         themeBtn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
         themeBtn.addActionListener(e -> {
             Theme.toggle();
@@ -227,14 +227,14 @@ public class MainWindow extends JFrame implements SceneListener {
     // ═══════════════════════════════════════════════════════════
 
     private void setupLanguageAndTheme() {
-        I18n.setChangeListener(lang -> SwingUtilities.invokeLater(this::applyThemeAndLanguage));
-        Theme.setChangeListener(p -> SwingUtilities.invokeLater(this::applyThemeAndLanguage));
+        I18n.addChangeListener(lang -> SwingUtilities.invokeLater(this::applyThemeAndLanguage));
+        Theme.addChangeListener(p -> SwingUtilities.invokeLater(this::applyThemeAndLanguage));
         Colors.updateTheme();
     }
 
     private void applyThemeAndLanguage() {
         Colors.updateTheme();
-        getContentPane().setBackground(Colors.BACKGROUND_DEEPEST);
+        getContentPane().setBackground(Colors.bgDeepest());
         SwingUtilities.updateComponentTreeUI(this);
         sceneController.refreshLanguage();
         langBtn.setText(I18n.getCurrentLang() == I18n.Lang.CHINESE ? I18n.get("lang.en") : I18n.get("lang.zh"));

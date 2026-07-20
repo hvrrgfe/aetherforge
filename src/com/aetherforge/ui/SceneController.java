@@ -37,8 +37,8 @@ public class SceneController implements SceneListener {
     private void setupTree() {
         tree.setRootVisible(true);
         tree.setShowsRootHandles(true);
-        tree.setBackground(Colors.BACKGROUND_PANEL);
-        tree.setForeground(Colors.TEXT_PRIMARY);
+        tree.setBackground(Colors.bgPanel());
+        tree.setForeground(Colors.textPrimary());
         tree.setFont(UIManager.getFont("defaultFont").deriveFont(Font.PLAIN, 13f));
         tree.setRowHeight(28);
         tree.setBorder(new EmptyBorder(4, 4, 4, 4));
@@ -46,16 +46,16 @@ public class SceneController implements SceneListener {
         tree.addTreeSelectionListener(e -> onTreeSelection(e));
 
         JPopupMenu popup = new JPopupMenu();
-        popup.setBackground(Colors.BACKGROUND_RAISED);
-        popup.setBorder(BorderFactory.createLineBorder(Colors.BORDER_LINE));
+        popup.setBackground(Colors.bgRaised());
+        popup.setBorder(BorderFactory.createLineBorder(Colors.borderLine()));
         JMenuItem addItem = new JMenuItem("+ " + I18n.get("tree.new"));
-        addItem.setForeground(Colors.TEXT_PRIMARY);
-        addItem.setBackground(Colors.BACKGROUND_RAISED);
+        addItem.setForeground(Colors.textPrimary());
+        addItem.setBackground(Colors.bgRaised());
         addItem.addActionListener(e -> createEntity());
         popup.add(addItem);
         JMenuItem delItem = new JMenuItem(I18n.get("tree.delete"));
-        delItem.setForeground(Colors.TEXT_PRIMARY);
-        delItem.setBackground(Colors.BACKGROUND_RAISED);
+        delItem.setForeground(Colors.textPrimary());
+        delItem.setBackground(Colors.bgRaised());
         delItem.addActionListener(e -> deleteSelected());
         popup.add(delItem);
         tree.setComponentPopupMenu(popup);
@@ -86,14 +86,14 @@ public class SceneController implements SceneListener {
 
     private JPanel createToolbar() {
         JPanel tb = new JPanel(new FlowLayout(FlowLayout.LEFT, 2, 2));
-        tb.setBackground(Colors.BACKGROUND_RAISED);
+        tb.setBackground(Colors.bgRaised());
         tb.setPreferredSize(new Dimension(0, 24));
 
         JButton undoBtn = new JButton("\u2190");
         undoBtn.setFont(UIManager.getFont("defaultFont").deriveFont(Font.PLAIN, 12f));
         undoBtn.setFocusPainted(false); undoBtn.setBorderPainted(false);
         undoBtn.setContentAreaFilled(false);
-        undoBtn.setForeground(Colors.TEXT_SECONDARY);
+        undoBtn.setForeground(Colors.textSecondary());
         undoBtn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
         undoBtn.addActionListener(e -> undo());
         undoBtn.setToolTipText(I18n.get("log.undo"));
@@ -102,7 +102,7 @@ public class SceneController implements SceneListener {
         redoBtn.setFont(UIManager.getFont("defaultFont").deriveFont(Font.PLAIN, 12f));
         redoBtn.setFocusPainted(false); redoBtn.setBorderPainted(false);
         redoBtn.setContentAreaFilled(false);
-        redoBtn.setForeground(Colors.TEXT_SECONDARY);
+        redoBtn.setForeground(Colors.textSecondary());
         redoBtn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
         redoBtn.addActionListener(e -> redo());
         redoBtn.setToolTipText(I18n.get("log.redo"));
@@ -143,16 +143,16 @@ public class SceneController implements SceneListener {
         treeModel.nodeChanged(treeRoot);
         // Rebuild popup
         JPopupMenu popup = new JPopupMenu();
-        popup.setBackground(Colors.BACKGROUND_RAISED);
-        popup.setBorder(BorderFactory.createLineBorder(Colors.BORDER_LINE));
+        popup.setBackground(Colors.bgRaised());
+        popup.setBorder(BorderFactory.createLineBorder(Colors.borderLine()));
         JMenuItem addItem = new JMenuItem("+ " + I18n.get("tree.new"));
-        addItem.setForeground(Colors.TEXT_PRIMARY);
-        addItem.setBackground(Colors.BACKGROUND_RAISED);
+        addItem.setForeground(Colors.textPrimary());
+        addItem.setBackground(Colors.bgRaised());
         addItem.addActionListener(e -> createEntity());
         popup.add(addItem);
         JMenuItem delItem = new JMenuItem(I18n.get("tree.delete"));
-        delItem.setForeground(Colors.TEXT_PRIMARY);
-        delItem.setBackground(Colors.BACKGROUND_RAISED);
+        delItem.setForeground(Colors.textPrimary());
+        delItem.setBackground(Colors.bgRaised());
         delItem.addActionListener(e -> deleteSelected());
         popup.add(delItem);
         tree.setComponentPopupMenu(popup);
@@ -169,8 +169,8 @@ public class SceneController implements SceneListener {
             boolean isSel = value instanceof DefaultMutableTreeNode
                 && ((DefaultMutableTreeNode) value).getUserObject() instanceof Entity e
                 && scene.isSelected(e);
-            label.setBackground(isSel ? Colors.BACKGROUND_HOVER : Colors.BACKGROUND_PANEL);
-            label.setForeground(isSel ? Colors.BLUE : Colors.TEXT_PRIMARY);
+            label.setBackground(isSel ? Colors.bgHover() : Colors.bgPanel());
+            label.setForeground(isSel ? Colors.BLUE : Colors.textPrimary());
             label.setBorder(new EmptyBorder(2, 4, 2, 4));
             if (value instanceof DefaultMutableTreeNode) {
                 Object userObj = ((DefaultMutableTreeNode) value).getUserObject();
