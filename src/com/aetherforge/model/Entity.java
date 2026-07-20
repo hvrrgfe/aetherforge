@@ -5,6 +5,7 @@ import java.util.UUID;
 import com.aetherforge.util.Colors;
 
 public class Entity {
+    private static int instanceCounter = 0;
     private String id;
     private String type;
     private String name;
@@ -15,6 +16,11 @@ public class Entity {
     public Entity(String type, String name) {
         this.id = "ent_" + UUID.randomUUID().toString().substring(0, 6);
         this.type = type; this.name = name;
+        // 偏移位置防止实体重叠
+        instanceCounter++;
+        int offset = (instanceCounter % 10) * 40;
+        this.x = offset - 180;
+        this.y = (instanceCounter / 10) * 40 - 60;
     }
 
     public String getId() { return id; }

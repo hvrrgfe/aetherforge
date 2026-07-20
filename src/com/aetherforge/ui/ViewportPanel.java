@@ -7,7 +7,7 @@ import java.awt.*;
 import java.awt.event.*;
 import java.util.List;
 import java.util.Map;
-import java.util.WeakHashMap;
+import java.util.HashMap;
 
 /**
  * 2D viewport with spring-animated entity entrance/exit and hover effects.
@@ -22,7 +22,7 @@ public class ViewportPanel extends JPanel {
     private Entity hoveredEntity;
 
     // spring animation state
-    private final Map<Entity, Long> appearTimes = new WeakHashMap<>();
+    private final Map<Entity, Long> appearTimes = new HashMap<>();
     private Entity fadingOut;
     private long fadeStartTime;
     private static final long APPEAR_MS = 280;
@@ -63,20 +63,38 @@ public class ViewportPanel extends JPanel {
     }
 
     private void startAnimTimer() {
-        if (animTimer != null && animTimer.isRunning()) return;
+        // Cancel and restart to avoid race between appear and fade
+        if (animTimer != null && animTimer.isRunning()) {
+            animTimer.stop();
+        }
         animTimer = new Timer(16, e -> {
             long now = System.currentTimeMillis();
             boolean keepGoing = false;
-            for (Map.Entry<Entity, Long> entry : appearTimes.entrySet()) {
-                if (now - entry.getValue() < APPEAR_MS) keepGoing = true;
+
+            // Appear animation
+            var iter = appearTimes.entrySet().iterator();
+            while (iter.hasNext()) {
+                var entry = iter.next();
+                if (now - entry.getValue() >= APPEAR_MS) {
+                    iter.remove();
+                } else {
+                    keepGoing = true;
+                }
             }
-            appearTimes.entrySet().removeIf(e2 -> now - e2.getValue() >= APPEAR_MS);
+
+            // Fade-out animation  
             if (fadingOut != null) {
-                if (now - fadeStartTime < FADE_MS) keepGoing = true;
-                else fadingOut = null;
+                if (now - fadeStartTime < FADE_MS) {
+                    keepGoing = true;
+                } else {
+                    fadingOut = null;
+                }
             }
+
             repaint();
-            if (!keepGoing && animTimer != null) animTimer.stop();
+            if (!keepGoing) {
+                animTimer.stop();
+            }
         });
         animTimer.start();
     }

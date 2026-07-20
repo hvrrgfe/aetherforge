@@ -114,7 +114,9 @@ public final class Theme {
             }
             // 每个主题切换后重新应用 CJK 字体
             applyCJKFont();
-        } catch (Exception ignored) {}
+        } catch (Exception e) {
+            System.err.println("[Theme] Failed to set theme: " + e.getMessage());
+        }
         if (listener != null) listener.accept(p);
     }
 
@@ -138,6 +140,8 @@ public final class Theme {
             if (uiFont == null) uiFont = new Font("Microsoft YaHei UI", Font.PLAIN, 13);
             javax.swing.plaf.FontUIResource fur = new javax.swing.plaf.FontUIResource(uiFont);
             UIManager.put("defaultFont", fur);
-        } catch (Exception ignored) {}
+        } catch (Exception e) {
+            System.err.println("[Theme] Failed to apply CJK font: " + e.getMessage());
+        }
     }
 }

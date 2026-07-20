@@ -593,26 +593,29 @@ public class MainWindow extends JFrame {
         } else {
             fixedKey = labelText;
         }
-        javax.swing.event.DocumentListener dl = new javax.swing.event.DocumentListener() {
-            public void insertUpdate(javax.swing.event.DocumentEvent e) { apply(); }
-            public void removeUpdate(javax.swing.event.DocumentEvent e) { apply(); }
-            public void changedUpdate(javax.swing.event.DocumentEvent e) { apply(); }
-            private void apply() {
-                if (selectedEntity == null) return;
-                try {
-                    double v = Double.parseDouble(field.getText());
-                    boolean changed = false;
-                    switch (fixedKey) {
-                        case "X" -> { selectedEntity.setX(v); changed = true; }
-                        case "Y" -> { selectedEntity.setY(v); changed = true; }
-                        case "W" -> { selectedEntity.setWidth(v); changed = true; }
-                        case "H" -> { selectedEntity.setHeight(v); changed = true; }
-                    }
-                    if (changed) { viewportPanel.repaint(); updateStatusBar(); }
-                } catch (NumberFormatException ignored) {}
+        // FocusLost + Enter validates; won't break on partial input like "-" or "."
+        field.addActionListener(e -> applyInspectorEdit(field, fixedKey));
+        field.addFocusListener(new java.awt.event.FocusAdapter() {
+            @Override
+            public void focusLost(java.awt.event.FocusEvent e) { applyInspectorEdit(field, fixedKey); }
+        });
+        // Visual feedback on invalid input
+        field.addKeyListener(new java.awt.event.KeyAdapter() {
+            @Override
+            public void keyReleased(java.awt.event.KeyEvent e) {
+                try { Double.parseDouble(field.getText());
+                    field.setForeground(Colors.TEXT_PRIMARY);
+                    field.setBorder(BorderFactory.createCompoundBorder(
+                        BorderFactory.createLineBorder(Colors.BORDER_LINE, 1),
+                        new EmptyBorder(1, DP4, 1, DP4)));
+                } catch (NumberFormatException ex) {
+                    field.setForeground(Colors.RED);
+                    field.setBorder(BorderFactory.createCompoundBorder(
+                        BorderFactory.createLineBorder(Colors.RED, 1),
+                        new EmptyBorder(1, DP4, 1, DP4)));
+                }
             }
-        };
-        field.getDocument().addDocumentListener(dl);
+        });
         row.add(labelComp, BorderLayout.WEST);
         row.add(field, BorderLayout.CENTER);
         inspectorPanel.add(row);
@@ -765,8 +768,8 @@ public class MainWindow extends JFrame {
         getContentPane().setBackground(Colors.BACKGROUND_DEEPEST);
         updateComponentTree(getContentPane());
         SwingUtilities.updateComponentTreeUI(this);
-        langBtn.setText(I18n.get("lang.zh"));
-        themeBtn.setText(I18n.get("theme.dark"));
+        langBtn.setText(getOppositeLang());
+        themeBtn.setText(getOppositeTheme());
         refreshInspector();
         updateStatusBar();
         repaintSceneTree();
@@ -779,5 +782,36 @@ public class MainWindow extends JFrame {
             if (comp instanceof JPanel) { comp.setBackground(Colors.BACKGROUND_DEEPEST); }
             if (comp instanceof Container) { updateComponentTree((Container) comp); }
         }
+    }
+
+    private void applyInspectorEdit(JTextField field, String fixedKey) {
+        if (selectedEntity == null) return;
+        try {
+            double v = Double.parseDouble(field.getText().trim());
+            boolean changed = false;
+            switch (fixedKey) {
+                case "X" -> { selectedEntity.setX(v); changed = true; }
+                case "Y" -> { selectedEntity.setY(v); changed = true; }
+                case "W" -> { selectedEntity.setWidth(v); changed = true; }
+                case "H" -> { selectedEntity.setHeight(v); changed = true; }
+            }
+            if (changed) { viewportPanel.repaint(); updateStatusBar(); }
+            field.setForeground(Colors.TEXT_PRIMARY);
+        } catch (NumberFormatException e) {
+            // Keep old value, show red briefly
+            field.setForeground(Colors.RED);
+        }
+    }
+
+    private String getOppositeLang() {
+        return I18n.getCurrentLang() == I18n.Lang.CHINESE ? I18n.get("lang.en") : I18n.get("lang.zh");
+    }
+
+    private String getOppositeTheme() {
+        return switch (Theme.getCurrent()) {
+            case DARK -> I18n.get("theme.dracula");
+            case LIGHT -> I18n.get("theme.dark");
+            case DRACULA -> I18n.get("theme.light");
+        };
     }
 }
