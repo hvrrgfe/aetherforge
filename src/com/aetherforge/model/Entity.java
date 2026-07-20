@@ -9,17 +9,17 @@ public class Entity {
     private String type;
     private String name;
     private double x, y, width = 32, height = 32;
+    private int serial;
     private Color color;
     private boolean isCircle, isPlayer;
 
     public Entity(String type, String name) {
         this.id = "ent_" + UUID.randomUUID().toString().substring(0, 6);
         this.type = type; this.name = name;
-        // 偏移位置防止实体重叠
-        instanceCounter++;
-        int offset = (instanceCounter % 10) * 40;
+        this.serial = instanceCounter++;
+        int offset = (serial % 10) * 40;
         this.x = offset - 180;
-        this.y = (instanceCounter / 10) * 40 - 60;
+        this.y = (serial / 10) * 40 - 60;
         this.color = nextPresetColor();
     }
 

@@ -142,7 +142,8 @@ public class MainWindow extends JFrame implements SceneListener {
         JPanel centerPanel = new JPanel(new BorderLayout());
         centerPanel.setBackground(Colors.bgDeepest());
         centerPanel.add(LayoutBuilder.createViewportToolbar(
-            () -> sceneController.createEntity(), () -> sceneController.deleteSelected()
+            () -> sceneController.createEntity(), () -> sceneController.deleteSelected(),
+            mode -> viewport.setToolMode(mode), viewport.getToolMode()
         ), BorderLayout.NORTH);
         centerPanel.add(viewport, BorderLayout.CENTER);
 

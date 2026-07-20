@@ -130,7 +130,9 @@ public final class LayoutBuilder {
         return sp;
     }
 
-    public static JPanel createViewportToolbar(Runnable onNew, Runnable onDelete) {
+    public static JPanel createViewportToolbar(Runnable onNew, Runnable onDelete,
+            java.util.function.Consumer<ViewportPanel.ToolMode> onToolChange,
+            ViewportPanel.ToolMode currentMode) {
         JPanel toolbar = new JPanel(new FlowLayout(FlowLayout.LEFT, 2, 3));
         toolbar.setBackground(Colors.bgRaised());
         toolbar.setPreferredSize(new Dimension(0, DP28));
@@ -147,9 +149,13 @@ public final class LayoutBuilder {
             tb.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
             tb.setRolloverEnabled(true);
             if (i == 0) tb.setSelected(true);
+            final int fi = i;
             tb.addItemListener(e -> {
                 tb.setBackground(tb.isSelected() ? Colors.bgHover() : Colors.bgRaised());
                 tb.setForeground(tb.isSelected() ? Colors.BLUE : Colors.textSecondary());
+                if (tb.isSelected() && onToolChange != null) {
+                    onToolChange.accept(ViewportPanel.ToolMode.values()[fi]);
+                }
             });
             group.add(tb);
             toolbar.add(tb);

@@ -8,6 +8,4 @@ public interface Command {
     void execute();
     void undo();
     String getName();
-    default boolean canMerge() { return false; }
-    default Command merge(Command next) { return null; }
 }

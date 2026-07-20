@@ -165,7 +165,7 @@ public class InspectorController implements com.aetherforge.model.SceneListener 
             double v = Double.parseDouble(field.getText().trim());
             setter.set(v);
             field.setForeground(Colors.textPrimary());
-            field.setText(String.valueOf((int) v));
+            field.setText(String.format("%.1f", v));
         } catch (NumberFormatException e) {
             field.setForeground(Colors.RED);
         }

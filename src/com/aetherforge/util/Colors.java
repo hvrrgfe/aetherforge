@@ -38,11 +38,11 @@ public final class Colors {
         new Color(0x40, 0xe0, 0xe0),
     };
 
-    // 固定色
-    public static final Color BLUE   = new Color(0x40, 0x80, 0xf0);
-    public static final Color GREEN  = new Color(0x40, 0xd0, 0x80);
-    public static final Color RED    = new Color(0xf0, 0x40, 0x70);
-    public static final Color ORANGE = new Color(0xf0, 0xa0, 0x40);
+    // 固定色（引用 Theme 避免重复定义）
+    public static final Color BLUE   = com.aetherforge.util.Theme.BLUE;
+    public static final Color GREEN  = com.aetherforge.util.Theme.GREEN;
+    public static final Color RED    = com.aetherforge.util.Theme.RED;
+    public static final Color ORANGE = com.aetherforge.util.Theme.ORANGE;
     public static final Color RESIZE_HANDLE  = new Color(0x33, 0x33, 0x33);
     public static final Color GLOW_OUTER     = new Color(0x40, 0x80, 0xf0, 40);
     public static final Color GLOW_INNER     = new Color(0x40, 0x80, 0xf0, 80);

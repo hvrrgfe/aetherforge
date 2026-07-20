@@ -28,10 +28,10 @@ public class ViewportPanel extends JPanel implements SceneListener {
     private long fadeStartTime;
     private static final long APPEAR_MS = 280;
     private static final long FADE_MS = 200;
+    public enum ToolMode { SELECT, MOVE, SCALE }
+    private ToolMode toolMode = ToolMode.SELECT;
     private boolean snapEnabled = true;
     private Timer animTimer;
-    private double targetCamX, targetCamY, targetCamZoom;
-    private boolean cameraAnimating;
 
     public ViewportPanel(Scene scene) {
         this.scene = scene;
@@ -57,9 +57,7 @@ public class ViewportPanel extends JPanel implements SceneListener {
         });
 
         scene.addListener(this);
-        targetCamX = scene.getCameraX();
-        targetCamY = scene.getCameraY();
-        targetCamZoom = scene.getCameraZoom();
+
     }
 
     public void animateEntityIn(Entity entity) {
@@ -86,14 +84,11 @@ public class ViewportPanel extends JPanel implements SceneListener {
         return scene.getCameraY();
     }
 
-    private void updateCameraAnimation() {
-        // Smooth camera disabled for now - use direct values
-    }
+    private void updateCameraAnimation() {}
 
     public void smoothMoveCamera(double dx, double dy) {
         scene.moveCamera(-dx / scene.getCameraZoom(), -dy / scene.getCameraZoom());
-        targetCamX = scene.getCameraX();
-        targetCamY = scene.getCameraY();
+
     }
 
     private void startAnimTimer() {
@@ -258,7 +253,6 @@ public class ViewportPanel extends JPanel implements SceneListener {
             requestFocusInWindow();
             if (e.getClickCount() == 2 && dragEntity == null) {
                 scene.resetCamera();
-                cameraAnimating = false;
                 return;
             }
             double wx = (e.getX() - getWidth() / 2.0) / scene.getCameraZoom() - scene.getCameraX();
@@ -267,12 +261,14 @@ public class ViewportPanel extends JPanel implements SceneListener {
             for (Entity en : scene.getEntities()) {
                 if (en.containsPoint(wx, wy)) { hit = en; break; }
             }
-            if (hit != null) {
+            if (hit != null && toolMode == ToolMode.SELECT) {
                 scene.setSelectedEntity(hit);
+            }
+            if (hit != null && (toolMode == ToolMode.MOVE || toolMode == ToolMode.SELECT)) {
                 dragEntity = hit; isDragging = true;
                 dragOffsetX = e.getX(); dragOffsetY = e.getY();
-            } else {
-                scene.clearSelection();
+            } else if (hit == null) {
+                if (toolMode == ToolMode.SELECT) scene.clearSelection();
                 isDragging = true; dragStart = e.getPoint();
             }
             repaint();

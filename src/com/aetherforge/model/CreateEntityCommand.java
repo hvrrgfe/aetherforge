@@ -21,9 +21,9 @@ public class CreateEntityCommand implements Command {
     public void execute() {
         if (entity == null) {
             entity = new Entity(entityType, entityName);
+            scene.addEntity(entity);
+            scene.setSelectedEntity(entity);
         }
-        scene.addEntity(entity);
-        scene.setSelectedEntity(entity);
     }
 
     @Override
