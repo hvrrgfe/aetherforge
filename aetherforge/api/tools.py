@@ -32,10 +32,13 @@ class EngineTools:
 
     @tool(desc="Create semantically-described entity")
     def create_entity(self, semantic_type='generic', name='', description='',
-                      capabilities=None, requires=None, state=None,
+                      capabilities=None, requires=None, state=None, desc=None,
                       relationships=None, position=None, size=None,
                       visual=None, tags=None, editable_properties=None):
         try:
+            # Alias: desc -> description
+            if desc is not None and not description:
+                description = desc
             e = SemanticEntity(
                 semantic_type=semantic_type, name=name, description=description,
                 capabilities=capabilities or [], requires=requires or {},
@@ -80,9 +83,14 @@ class EngineTools:
         return ToolResult(True, {'count': len(results), 'entities': [e.to_dict() for e in results]})
 
     @tool(desc="Create game rule (when/then)")
-    def create_rule(self, when=None, then=None, else_actions=None,
-                    trigger_type='interaction', cooldown=0.0, priority=0):
+    def create_rule(self, when=None, then=None, trigger=None, action=None,
+                    else_actions=None, trigger_type='interaction', cooldown=0.0, priority=0):
         try:
+            # Alias support: trigger/action -> when/then
+            if when is None and trigger is not None:
+                when = trigger
+            if then is None and action is not None:
+                then = action
             from aetherforge.core import Rule
             rule = Rule(when=when or [], then=then or [], else_then=else_actions or [],
                         trigger_type=RuleTriggerType(trigger_type),
@@ -159,10 +167,10 @@ class EngineTools:
             d['logs'] = []
         return ToolResult(True, d)
 
-    @tool(desc="Commit changes to world")
-    def commit_change(self):
+    @tool(desc="Commit changes to world with optional message")
+    def commit_change(self, message=None):
         self.world.commit()
-        return ToolResult(True, {'message': 'Changes committed'})
+        return ToolResult(True, {'message': message or 'Changes committed', 'label': message})
 
     @tool(desc="Rollback last change")
     def rollback_change(self):

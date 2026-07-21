@@ -7,4 +7,4 @@ Quick start:
 CLI:
     python -m aetherforge.test.test_runner
 """
-from aetherforge.test.test_runner import run_tests
+# Test modules loaded individually
