@@ -23,6 +23,9 @@ public class CreateEntityCommand implements Command {
             entity = new Entity(entityType, entityName);
             scene.addEntity(entity);
             scene.setSelectedEntity(entity);
+        } else {
+            scene.addEntity(entity);
+            scene.setSelectedEntity(entity);
         }
     }
 
