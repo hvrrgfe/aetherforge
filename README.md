@@ -1,6 +1,6 @@
 # AetherForge
 
-**AI-Native Game Creation & Runtime System**
+**AI-Native 游戏创作与运行时系统**
 
 | 语言 | 模块 | 功能 | 状态 |
 |------|------|------|------|
@@ -10,14 +10,14 @@
 
 ## 快速开始
 
-### WinUI 桌面客户端
+### WinUI 桌面客户端（推荐）
 
 `powershell
 cd AetherForgeStudio-WinUI
 dotnet run
 `
 
-或直接双击 `start_ui.bat` 启动预编译 EXE（212MB 自包含）。
+启动前需安装 .NET 9 SDK：https://dotnet.microsoft.com/download/dotnet/9.0
 
 ### Python 引擎 / MCP Server
 
