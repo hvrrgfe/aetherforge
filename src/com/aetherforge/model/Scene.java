@@ -4,28 +4,28 @@ import com.aetherforge.util.I18n;
 import java.util.*;
 
 /**
- * 鍦烘櫙鏁版嵁妯″瀷 鈥?瀹炰綋绠＄悊 + 浜嬩欢鐩戝惉 + 鎾ら攢/閲嶅仛鏍?
- * Viewport 鍜?MainWindow 閮戒緷璧栨妯″瀷鑰岄潪浜掔浉渚濊禆
+ * 场景数据模型 — 实体管理 + 事件监听 + 撤销/重做栈
+ * Viewport 和 MainWindow 都依赖此模型而非互相依赖
  */
 public class Scene {
 
-    // 鈹€鈹€鈹€ 鏁版嵁 鈹€鈹€鈹€
+    // ═══ 数据 ═══
     private final List<Entity> entities = new ArrayList<>();
     private Entity selectedEntity;
     private final Set<Entity> multiSelected = new HashSet<>();
     private double cameraX, cameraY, cameraZoom = 1.0;
 
-    // 鈹€鈹€鈹€ 浜嬩欢鐩戝惉 鈹€鈹€鈹€
+    // ═══ 事件监听 ═══
     private final List<SceneListener> listeners = new ArrayList<>();
 
-    // 鈹€鈹€鈹€ 鎾ら攢/閲嶅仛 鈹€鈹€鈹€
+    // ═══ 撤销/重做 ═══
     private final Deque<Command> undoStack = new ArrayDeque<>();
     private final Deque<Command> redoStack = new ArrayDeque<>();
     private static final int MAX_UNDO = 100;
 
-    // 鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺?
-    //  鐩戝惉鍣?
-    // 鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺?
+    
+    //  监听器
+    
 
     public void addListener(SceneListener l) { listeners.add(l); }
     public void removeListener(SceneListener l) { listeners.remove(l); }
@@ -40,9 +40,9 @@ public class Scene {
         for (SceneListener l : listeners) l.logMessage(msg);
     }
 
-    // 鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺?
-    //  瀹炰綋 CRUD
-    // 鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺?
+    
+    //  实体 CRUD
+    
 
     public List<Entity> getEntities() { return entities; }
 
@@ -90,9 +90,9 @@ public class Scene {
         fireSelection();
     }
 
-    // 鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺?
-    //  鐩告満
-    // 鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺?
+    
+    //  相机
+    
 
     public double getCameraX() { return cameraX; }
     public double getCameraY() { return cameraY; }
@@ -121,9 +121,9 @@ public class Scene {
         fireChange();
     }
 
-    // 鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺?
-    //  鎾ら攢/閲嶅仛
-    // 鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺?
+    
+    //  撤销/重做
+    
 
     public void executeCommand(Command cmd) {
         cmd.execute();
@@ -159,9 +159,9 @@ public class Scene {
     public String getUndoName() { return undoStack.isEmpty() ? "" : undoStack.getLast().getName(); }
     public String getRedoName() { return redoStack.isEmpty() ? "" : redoStack.getLast().getName(); }
 
-    // 鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺?
-    //  JSON 搴忓垪鍖?
-    // 鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺?
+    
+    //  JSON 序列化
+    
 
     public String toJson() {
         return com.aetherforge.util.SceneSerializer.toJson(this);

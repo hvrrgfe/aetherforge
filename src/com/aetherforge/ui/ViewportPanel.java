@@ -11,8 +11,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * 2D viewport 渚濊禆 Scene 鑰岄潪 MainWindow
- * 閫氳繃 SceneListener 鐩戝惉鍙樻洿锛屼笉鐩存帴鎸佹湁绐楀彛寮曠敤
+ * 2D viewport 依赖 Scene 而非 MainWindow
+ * 通过 SceneListener 监听变更，不直接持有窗口引用
  */
 public class ViewportPanel extends JPanel implements SceneListener {
 
