@@ -222,6 +222,7 @@ class WorldModel:
         self.revision += 1
         self.rules[rule.rule_id] = rule
         self._log("rule_added", {"rule_id": rule.rule_id})
+        return rule.rule_id
 
     def remove_rule(self, rule_id):
         if rule_id in self.rules:
@@ -239,6 +240,7 @@ class WorldModel:
     def create_quest(self, quest):
         self.quests[quest.quest_id] = quest
         self._log("quest_created", {"quest_id": quest.quest_id})
+        return quest.quest_id
 
     def update_quest_state(self, quest_id, new_state):
         if quest_id in self.quests:

@@ -109,7 +109,8 @@ class EngineTools:
     def create_quest(self, name='', description='', steps=None,
                      rewards=None, prerequisites=None):
         try:
-            qs = [QuestStep(**s) for s in (steps or [])]
+            step_fields = {k for k in QuestStep.__dataclass_fields__}
+            qs = [QuestStep(**{k:v for k,v in s.items() if k in step_fields}) for s in (steps or [])]
             q = Quest(name=name, description=description, steps=qs,
                       rewards=rewards or [], prerequisites=prerequisites or [])
             qid = self.world.create_quest(q)
