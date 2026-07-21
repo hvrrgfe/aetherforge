@@ -1,9 +1,17 @@
-﻿# === Java build ===
+# === Java ===
 build/
 target/
 *.class
 *.jar
 *.war
+
+# === Python ===
+__pycache__/
+*.py[cod]
+*.pyo
+*.egg-info/
+dist/
+*.egg
 
 # === IDE ===
 .idea/
@@ -19,7 +27,13 @@ Thumbs.db
 *.bak
 *.log
 
-# === Project-specific: exclude runtime and dist artifacts ===
+# === AetherForge ===
+projects/
+assets/generated/
+models/*.safetensors
+models/*.bin
+models/*.pth
+.aetherforge/
 runtime/
 jre/
 dist*
@@ -32,23 +46,23 @@ gen_*.py
 fix_*.py
 patch_*.py
 check_*.py
+temp_*.py
+temp_*.md
 
-# === FlatLaf (downloaded via Maven normally) ===
-flatlaf-*.jar
-META-INF/
-com/formdev/
-
-# === Maven wrapper ===
+# === Build artifacts ===
+MANIFEST.MF
+AetherForgeStudio-fat.jar
+dist-input/
+dist-new/
+dist-final/
+dist-v2/
+dependency-reduced-pom.xml
+AetherForge.spec
 .mvn/
 mvnw
 mvnw.cmd
 
-
-# Build artifacts
-MANIFEST.MF
-AetherForgeStudio-fat.jar
-dist-input/
-
-_fix5.py
-
-dist-new/
+# === FlatLaf ===
+flatlaf-*.jar
+META-INF/
+com/formdev/
