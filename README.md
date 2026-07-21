@@ -175,3 +175,13 @@ D:\game/
 - **AI** — OpenAI 兼容 API (支持 GPT, DeepSeek, Qwen 等)
 - **AI 模型** — HuggingFace Diffusers + AudioCraft (图像/音乐生成)
 - **测试** — pytest (117+ tests) + JUnit 5
+
+---
+
+## 支持项目
+
+如果 AetherForge 对你有帮助，欢迎请我喝杯咖啡 ☕
+
+![收款码](aetherforge/support-qr.png)
+
+你的支持是项目持续发展的动力！
