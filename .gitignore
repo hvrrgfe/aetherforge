@@ -83,3 +83,14 @@ __pycache__/
 
 # Temp files
 dist/
+
+# WinUI self-contained deployment
+AetherForgeStudio-WinUI/.winapp/
+
+# WebView2 build artifacts
+AetherForgeStudio-WebView2/bin/
+AetherForgeStudio-WebView2/obj/
+
+# Release artifacts
+release/
+

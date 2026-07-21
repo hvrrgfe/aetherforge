@@ -3,332 +3,416 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AetherForge</title>
+<title>AetherForge Studio</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 body{background:#0a0a12;color:#e0e0e0;font:14px system-ui;display:flex;height:100vh;overflow:hidden}
-#side{width:200px;background:#0d0d18;border-right:1px solid #1a1a3a;padding:16px}
-#side h1{font-size:16px;color:#4488ff;margin-bottom:12px}
-.stat{background:#12122a;border:1px solid #1a1a4a;border-radius:6px;padding:8px 12px;margin:6px 0}
-.stat-label{font-size:10px;color:#666}
-.stat-value{font-size:20px;font-weight:700}
-.controls{font-size:11px;color:#888;margin-top:12px;line-height:1.8}
-.controls kbd{background:#1a1a3a;border:1px solid #333;border-radius:3px;padding:1px 5px;font-size:10px;color:#ccc}
-#view{flex:1;position:relative;background:#0a0a12}
-canvas{display:block;width:100%;height:100%}
+#sidebar{width:220px;background:#0d0d18;border-right:1px solid #1a1a3a;display:flex;flex-direction:column}
+#sidebar h1{padding:16px;font-size:16px;color:#4488ff;border-bottom:1px solid #1a1a3a}
+#sidebar .nav{padding:8px 0;flex:1}
+.nav-item{padding:10px 16px;cursor:pointer;color:#888;display:flex;align-items:center;gap:8px;transition:.2s}
+.nav-item:hover{color:#e0e0e0;background:#12122a}
+.nav-item.active{color:#4488ff;background:#12122a;border-right:2px solid #4488ff}
+.nav-item .icon{width:20px;text-align:center;font-size:16px}
+#sidebar .server-status{padding:12px 16px;border-top:1px solid #1a1a3a;font-size:11px;display:flex;align-items:center;gap:6px}
+.status-dot{width:8px;height:8px;border-radius:50%;display:inline-block}
+.status-dot.online{background:#44ff88;box-shadow:0 0 4px #44ff8844}
+.status-dot.offline{background:#ff4444}
+#main{flex:1;display:flex;flex-direction:column;overflow:hidden}
+#toolbar{height:40px;background:#0d0d18;border-bottom:1px solid #1a1a3a;display:flex;align-items:center;padding:0 16px;gap:12px}
+#toolbar .title{font-size:13px;color:#666;flex:1}
+#content{flex:1;overflow-y:auto;padding:16px}
+.panel{display:none}
+.panel.active{display:block}
+.card{background:#12122a;border:1px solid #1a1a4a;border-radius:8px;padding:16px;margin-bottom:12px}
+.card h3{font-size:13px;color:#4488ff;margin-bottom:8px}
+.card .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px}
+.stat-item{padding:8px;background:#0d0d1a;border-radius:6px;text-align:center}
+.stat-item .val{font-size:24px;font-weight:700}
+.stat-item .lbl{font-size:10px;color:#666;margin-top:2px}
+.entity-row{display:flex;padding:8px;background:#0d0d1a;border-radius:6px;margin:4px 0;align-items:center;gap:8px;cursor:pointer;transition:.2s}
+.entity-row:hover{background:#1a1a3a}
+.entity-row .name{flex:1;font-weight:600}
+.entity-row .type{font-size:11px;color:#888}
+.entity-row .state{font-size:11px;color:#44ff88}
+input,select,button,.btn{font-family:system-ui;font-size:13px}
+input,select{background:#12122a;color:#e0e0e0;border:1px solid #1a1a4a;padding:6px 10px;border-radius:4px}
+input:focus,select:focus{outline:none;border-color:#4488ff}
+button,.btn{background:#2244aa;color:#fff;border:none;padding:6px 14px;border-radius:4px;cursor:pointer}
+button:hover,.btn:hover{background:#2a55cc}
+button.danger{background:#aa2222}
+button.danger:hover{background:#cc2a2a}
+pre{background:#0d0d1a;padding:12px;border-radius:6px;overflow:auto;font-size:12px;max-height:400px;color:#ccc}
+#toast{position:fixed;bottom:20px;right:20px;background:#12122a;border:1px solid #1a1a4a;border-radius:8px;padding:12px 20px;display:none;z-index:999;font-size:13px;animation:fadeIn .3s}
+@keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.entity-detail{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:#12122a;border:1px solid #4488ff;border-radius:12px;padding:24px;min-width:400px;max-width:600px;max-height:80vh;overflow-y:auto;z-index:1000;display:none;box-shadow:0 8px 32px rgba(0,0,0,.6)}
+.entity-detail .close{float:right;cursor:pointer;color:#888;font-size:20px}
+.entity-detail .close:hover{color:#fff}
+.overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.5);z-index:999;display:none}
+.model-item{padding:8px;background:#0d0d1a;border-radius:6px;margin:4px 0;display:flex;align-items:center;gap:8px}
+.model-item .info{flex:1}
+.model-item .info .name{color:#e0e0e0;font-weight:600}
+.model-item .info .desc{font-size:11px;color:#888}
+.model-item .info .type{font-size:10px;color:#4488ff}
 </style>
 </head>
 <body>
-<div id="side">
-  <h1>AETHERFORGE</h1>
-  <div class="stat"><div class="stat-label">TICK</div><div class="stat-value" id="tick" style="color:#4488ff">0</div></div>
-  <div class="stat"><div class="stat-label">ENTITIES</div><div class="stat-value" id="ecount" style="color:#44ff88">0</div></div>
-  <div class="stat"><div class="stat-label">PLAYER</div><div class="stat-value" id="pinfo" style="color:#ffaa44;font-size:14px">-</div></div>
-  <div class="controls">
-    <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> Move<br>
-    <kbd>Space</kbd> / <kbd>J</kbd> Action<br>
-    <kbd>E</kbd> Interact<br>
-<div id="model-section" style="margin-top:16px;border-top:1px solid #1a1a3a;padding-top:12px">
-  <h3 style="font-size:13px;color:#4488ff;margin-bottom:8px">AI Models</h3>
-  <div style="display:flex;gap:4px;margin-bottom:8px">
-    <select id="model-type" style="flex:1;background:#12122a;color:#e0e0e0;border:1px solid #1a1a4a;padding:4px 6px;font-size:11px;border-radius:4px">
-      <option value="">All Types</option>
-      <option value="image">Image</option>
-      <option value="music">Music</option>
-      <option value="audio">Audio</option>
-    </select>
+<div id="sidebar">
+  <h1>? AETHERFORGE</h1>
+  <div class="nav">
+    <div class="nav-item active" onclick="switchPanel('dashboard',this)"><span class="icon">?</span>仪表盘</div>
+    <div class="nav-item" onclick="switchPanel('entities',this)"><span class="icon">?</span>实体</div>
+    <div class="nav-item" onclick="switchPanel('models',this)"><span class="icon">◆</span>AI 模型</div>
+    <div class="nav-item" onclick="switchPanel('world3d',this)"><span class="icon">?</span>3D 世界</div>
+    <div class="nav-item" onclick="switchPanel('tools',this)"><span class="icon">?</span>工具</div>
   </div>
-  <div style="display:flex;gap:4px;margin-bottom:8px">
-    <input id="model-query" placeholder="Search HF models..." style="flex:1;background:#12122a;color:#e0e0e0;border:1px solid #1a1a4a;padding:4px 6px;font-size:11px;border-radius:4px"/>
-    <button onclick="searchModels()" style="background:#2244aa;color:white;border:none;padding:4px 10px;border-radius:4px;cursor:pointer;font-size:11px">Search</button>
-  </div>
-  <div id="model-list" style="max-height:200px;overflow-y:auto;font-size:11px">
-    <div style="color:#666;padding:8px;text-align:center">Click Search to browse models</div>
+  <div class="server-status">
+    <span class="status-dot offline" id="statusDot"></span>
+    <span id="statusText">正在检查服务器...</span>
   </div>
 </div>
-    <kbd>Esc</kbd> Pause
+<div id="main">
+  <div id="toolbar">
+    <span class="title" id="pageTitle">仪表盘</span>
+    <span id="revBadge" style="font-size:11px;color:#888">版本: 0</span>
+    <button onclick="refreshAll()" style="font-size:11px;padding:4px 10px">刷新</button>
+  </div>
+  <div id="content">
+
+    <!-- Dashboard -->
+    <div class="panel active" id="panel-dashboard">
+      <div class="card">
+        <h3>World Overview</h3>
+        <div class="grid" id="statsGrid">
+          <div class="stat-item"><div class="val" id="sTick" style="color:#4488ff">-</div><div class="lbl">Tick</div></div>
+          <div class="stat-item"><div class="val" id="sEntities" style="color:#44ff88">-</div><div class="lbl">实体</div></div>
+          <div class="stat-item"><div class="val" id="sRules" style="color:#ffaa44">-</div><div class="lbl">Rules</div></div>
+          <div class="stat-item"><div class="val" id="sQuests" style="color:#ff66aa">-</div><div class="lbl">Quests</div></div>
+          <div class="stat-item"><div class="val" id="sWeather" style="color:#88bbff;font-size:16px">-</div><div class="lbl">Weather</div></div>
+          <div class="stat-item"><div class="val" id="sTime" style="color:#aaff88;font-size:16px">-</div><div class="lbl">Game Time</div></div>
+        </div>
+      </div>
+      <div class="card">
+        <h3>Recent Entities</h3>
+        <div id="recentEntities"><div style="color:#666;padding:8px">Loading...</div></div>
+      </div>
+    </div>
+
+    <!-- Entities -->
+    <div class="panel" id="panel-entities">
+      <div class="card">
+        <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px">
+          <h3 style="margin:0;flex:1">All Entities</h3>
+          <input id="entitySearch" placeholder="Search..." style="width:200px" oninput="filterEntities()"/>
+          <select id="entityTypeFilter" onchange="filterEntities()">
+            <option value="">All Types</option>
+            <option value="npc">NPC</option>
+            <option value="item">Item</option>
+            <option value="trigger">Trigger</option>
+            <option value="player">Player</option>
+            <option value="object">Object</option>
+          </select>
+        </div>
+        <div id="entityList"></div>
+      </div>
+    </div>
+
+    <!-- AI Models -->
+    <div class="panel" id="panel-models">
+      <div class="card">
+        <h3>Model Browser</h3>
+        <div style="display:flex;gap:8px;margin-bottom:12px">
+          <select id="hfModelType" style="width:120px">
+            <option value="">All Types</option>
+            <option value="image">Image</option>
+            <option value="music">Music</option>
+            <option value="audio">Audio</option>
+          </select>
+          <input id="hfQuery" placeholder="Search HuggingFace models..." style="flex:1"/>
+          <button onclick="searchModels()">Search</button>
+        </div>
+        <div id="modelList"><div style="color:#666;padding:8px">Click Search to browse models from HuggingFace</div></div>
+      </div>
+      <div class="card">
+        <h3>Local Models</h3>
+        <div id="localModels"><div style="color:#666;padding:8px">Loading...</div></div>
+      </div>
+    </div>
+
+    <!-- 3D World -->
+    <div class="panel" id="panel-world3d">
+      <div class="card">
+        <h3>3D Scene Viewer</h3>
+        <div id="sceneInfo" style="font-size:11px;color:#888;margin-bottom:8px"></div>
+        <iframe id="viewer3d" src="/viewer_3d.html" style="width:100%;height:600px;border:1px solid #1a1a4a;border-radius:6px;background:#0a0a12"></iframe>
+      </div>
+    </div>
+
+    <!-- Tools -->
+    <div class="panel" id="panel-tools">
+      <div class="card">
+        <h3>API Tools</h3>
+        <div style="display:flex;gap:8px;margin-bottom:8px">
+          <select id="toolSelector" style="flex:1">
+            <option value="">选择一个工具...</option>
+          </select>
+          <button onclick="callTool()">Execute</button>
+        </div>
+        <div style="display:flex;gap:8px;margin-bottom:8px">
+          <input id="toolArgs" placeholder='JSON arguments (e.g. {"entity_id":"player"})' style="flex:1"/>
+        </div>
+        <pre id="tool结果">// 结果 will appear here</pre>
+      </div>
+      <div class="card">
+        <h3>Engine Log</h3>
+        <pre id="engineLog" style="max-height:200px">// Server started</pre>
+      </div>
+    </div>
+
   </div>
 </div>
-<div id="view"><canvas id="cv"></canvas></div>
+
+<!-- Entity Detail Modal -->
+<div class="overlay" id="modalOverlay" onclick="closeEntityDetail()"></div>
+<div class="entity-detail" id="entityDetail">
+  <span class="close" onclick="closeEntityDetail()">?</span>
+  <h3 id="detailTitle">Entity Detail</h3>
+  <pre id="detailBody"></pre>
+</div>
+
+<!-- Toast -->
+<div id="toast"></div>
+
 <script>
-(function(){
-var cv=document.getElementById("cv"),ctx=cv.getContext("2d");
-var gs=null,lt=0,keys={},frame=0,errDiv=null;
+const API = window.location.origin;
+let pollTimer = null;
+let allEntities = [];
+let allTools = [];
 
-// Debug bar
-errDiv=document.createElement("div");
-errDiv.id="dbg";
-errDiv.style.cssText="position:fixed;bottom:0;left:0;right:0;background:#c00;color:#fff;padding:8px;font:12px monospace;z-index:999;display:none";
-document.body.appendChild(errDiv);
-function dbg(msg){errDiv.style.display="block";errDiv.textContent=msg;}
-
-function resize(){
-  var v=document.getElementById("view");
-  cv.width=v.clientWidth||800;
-  cv.height=v.clientHeight||600;
-  ctx.fillStyle="#0a0a12"; ctx.fillRect(0,0,cv.width,cv.height);
-  ctx.fillStyle="#4488ff"; ctx.font="16px system-ui";
-  ctx.fillText("AetherForge Engine",10,30);
-}
-resize();
-window.addEventListener("resize",resize);
-
-// Input
-document.onkeydown=function(e){
-  keys[e.key]=true;
-  if(e.key.length==1||e.key.startsWith("Arrow"))e.preventDefault();
-};
-document.onkeyup=function(e){keys[e.key]=false};
-
-// Render: draw all entities generically based on their visual/type
-function dr(){
-  var w=cv.width,h=cv.height;
-  ctx.clearRect(0,0,w,h);
-  ctx.fillStyle="#0a0a12"; ctx.fillRect(0,0,w,h);
-
-  if(!gs||!gs.entities){
-    ctx.fillStyle="#4488ff"; ctx.font="14px system-ui";
-    ctx.fillText("Connecting...",20,60);
-    return;
-  }
-
-  // Camera: center on player if one exists
-  var cx=0, cy=0;
-  for(var i=0;i<gs.entities.length;i++){
-    if(gs.entities[i].is_player){
-      cx=w/2-gs.entities[i].x;
-      cy=h/2-gs.entities[i].y;
-      break;
-    }
-  }
-
-  // HUD
-  ctx.fillStyle="rgba(255,255,255,0.25)";
-  ctx.font="11px monospace";
-  ctx.fillText("Tick:"+gs.tick+" Ent:"+gs.entities.length,8,h-8);
-  document.getElementById("tick").textContent=gs.tick;
-  document.getElementById("ecount").textContent=gs.entities.length;
-  var pi=document.getElementById("pinfo");
-  for(var i=0;i<gs.entities.length;i++){if(gs.entities[i].is_player){
-    pi.textContent=gs.entities[i].name||gs.entities[i].id;
-    break;
-  }}
-
-  // Draw each entity
-  for(var i=0;i<gs.entities.length;i++){
-    var e=gs.entities[i];
-    var x=e.x+cx, y=e.y+cy;
-    var ew=e.width||32, eh=e.height||32;
-    if(x<-ew||x>w+ew||y<-eh||y>h+eh)continue;
-
-    ctx.fillStyle=e.color||"#888";
-
-    if(e.shape=="circle"){
-      ctx.beginPath();
-      ctx.arc(x+ew/2,y+eh/2,Math.min(ew,eh)/2,0,Math.PI*2);
-      ctx.fill();
-    }else if(e.shape=="triangle"){
-      ctx.beginPath();
-      if(e.type=="enemy"){
-        ctx.moveTo(x+ew/2,y+eh); ctx.lineTo(x+ew,y); ctx.lineTo(x,y);
-      }else{
-        ctx.moveTo(x+ew/2,y); ctx.lineTo(x+ew,y+eh); ctx.lineTo(x,y+eh);
-      }
-      ctx.closePath(); ctx.fill();
-    }else{
-      ctx.fillRect(x,y,ew,eh);
-    }
-
-    // Label
-    if(e.name&&e.name!=e.id){
-      ctx.fillStyle="rgba(255,255,255,0.5)";
-      ctx.font="10px sans-serif";
-      ctx.fillText(e.name,x,y-4);
-    }
-
-    // Player indicator
-    if(e.is_player){
-      ctx.strokeStyle="rgba(255,255,255,0.3)";
-      ctx.lineWidth=1;
-      ctx.strokeRect(x-2,y-2,ew+4,eh+4);
-    }
-  }
+// --- Navigation ---
+function switchPanel(name, el) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('panel-' + name).classList.add('active');
+  if (el) el.classList.add('active');
+  document.getElementById('pageTitle').textContent = el?.textContent?.trim() || name;
+  if (name === 'entities') refreshEntities();
+  if (name === 'models') refreshLocalModels();
+  if (name === 'tools') refreshTools();
 }
 
-function lp(ts){
-  frame++;
-  var dt=Math.min((ts-lt)/1000,0.05);lt=ts;
-  if(dt<=0)dt=0.016;
-
-  // Package all input for the generic tick
-  var payload={
-    up:!!(keys["w"]||keys["W"]||keys["ArrowUp"]),
-    down:!!(keys["s"]||keys["S"]||keys["ArrowDown"]),
-    left:!!(keys["a"]||keys["A"]||keys["ArrowLeft"]),
-    right:!!(keys["d"]||keys["D"]||keys["ArrowRight"]),
-    dt:dt
-  };
-
-  var x=new XMLHttpRequest();
-  x.open("POST","/api/tick",true);
-  x.setRequestHeader("Content-Type","application/json");
-  x.onload=function(){
-    try{
-      var r=JSON.parse(x.responseText);
-      if(r.error)dbg("Err: "+r.error);
-      gs=r;
-    }catch(e){dbg("Parse: "+e.message);}
-    dr();
-    requestAnimationFrame(lp);
-  };
-  x.onerror=function(){requestAnimationFrame(lp)};
-  x.send(JSON.stringify(payload));
+// --- Server Status ---
+async function checkServer() {
+  try {
+    const r = await fetch(API + '/api/summary', { signal: AbortSignal.timeout(3000) });
+    if (r.ok) {
+      document.getElementById('statusDot').className = 'status-dot online';
+      document.getElementById('statusText').textContent = 'Server Online';
+      return true;
+    }
+  } catch {}
+  document.getElementById('statusDot').className = 'status-dot offline';
+  document.getElementById('statusText').textContent = 'Server Offline';
+  return false;
 }
 
-// Init
-lt=performance.now();
-// Setup: clear world. Create a default player entity so something shows.
-var setupPayload={create_player:true,position:{x:400,y:300},visual:{color:"#00ccff",shape:"rectangle"},size:{width:28,height:28}};
-var x=new XMLHttpRequest();
-x.open("POST","/api/setup",true);
-x.setRequestHeader("Content-Type","application/json");
-x.onload=function(){
-  try{
-    var r=JSON.parse(x.responseText);
-    if(!r.success)dbg("Setup: "+(r.error||"fail"));
-  }catch(e){}
-  dr();
-  lp(lt);
-};
-x.onerror=function(){lp(lt)};
-x.send(JSON.stringify(setupPayload));
-})();
+// --- Toast ---
+function showToast(msg, color='#4488ff') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.style.borderColor = color;
+  t.style.display = 'block';
+  setTimeout(() => t.style.display = 'none', 3000);
+}
+
+// --- Refresh All ---
+async function refreshAll() {
+  const online = await checkServer();
+  if (!online) { showToast('Server offline - run python run_web.py', '#ff4444'); return; }
+  await refreshDashboard();
+  showToast('Refreshed', '#44ff88');
+}
+
+// --- Dashboard ---
+async function refreshDashboard() {
+  try {
+    const r = await fetch(API + '/api/game-state');
+    if (!r.ok) return;
+    const data = await r.json();
+    document.getElementById('sTick').textContent = data.tick ?? 0;
+    document.getElementById('sWeather').textContent = data.weather ?? '-';
+    document.getElementById('sTime').textContent = data.game_time ?? '-';
+    const entities = data.entities || [];
+    document.getElementById('sEntities').textContent = entities.length;
+
+    // Recent entities
+    const recent = entities.slice(-8).reverse();
+    const html = recent.map(e => 
+      `<div class="entity-row" onclick="showEntity('${e.id}')">
+        <span style="width:10px;height:10px;border-radius:50%;background:${e.color||'#888'};display:inline-block"></span>
+        <span class="name">${e.name||e.id}</span>
+        <span class="type">${e.type||'unknown'}</span>
+        <span style="font-size:10px;color:#888">${e.x},${e.y}</span>
+      </div>`
+    ).join('');
+    document.getElementById('recentEntities').innerHTML = html || '<div style="color:#666;padding:8px">No 实体</div>';
+  } catch(e) { console.error('Dashboard refresh error:', e); }
+}
+
+// --- Entity Detail ---
+function showEntity(id) {
+  fetch(API + '/api/tools/observe_entity', { method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({entity_id: id})
+  }).then(r => r.json()).then(data => {
+    document.getElementById('detailTitle').textContent = 'Entity: ' + id;
+    document.getElementById('detailBody').textContent = JSON.stringify(data, null, 2);
+    document.getElementById('entityDetail').style.display = 'block';
+    document.getElementById('modalOverlay').style.display = 'block';
+  }).catch(() => showToast('Failed to load entity', '#ff4444'));
+}
+
+function closeEntityDetail() {
+  document.getElementById('entityDetail').style.display = 'none';
+  document.getElementById('modalOverlay').style.display = 'none';
+}
+
+// --- Entities ---
+async function refreshEntities() {
+  try {
+    const r = await fetch(API + '/api/game-state');
+    if (!r.ok) return;
+    const data = await r.json();
+    allEntities = data.entities || [];
+    renderEntities();
+  } catch(e) { console.error(e); }
+}
+
+function filterEntities() {
+  renderEntities();
+}
+
+function renderEntities() {
+  const q = document.getElementById('entitySearch').value.toLowerCase();
+  const typeFilter = document.getElementById('entityTypeFilter').value;
+  const filtered = allEntities.filter(e => {
+    if (typeFilter && (e.type||'').toLowerCase() !== typeFilter) return false;
+    if (q && !(e.id+'').toLowerCase().includes(q) && !(e.name||'').toLowerCase().includes(q)) return false;
+    return true;
+  });
+  document.getElementById('entityList').innerHTML = filtered.map((e,i) =>
+    `<div class="entity-row" onclick="showEntity('${e.id}')" style="animation-delay:${i*30}ms">
+      <span style="width:10px;height:10px;border-radius:50%;background:${e.color||'#888'};display:inline-block"></span>
+      <span class="name">${e.name||e.id}</span>
+      <span class="type">${e.type||'unknown'}</span>
+      <span class="state">${Object.keys(e.state||{}).map(k=>k+':'+e.state[k]).join(', ')}</span>
+      <span style="font-size:10px;color:#888">(${e.x},${e.y})</span>
+    </div>`
+  ).join('') || '<div style="color:#666;padding:16px">No entities found</div>';
+}
+
+// --- AI Models ---
 async function searchModels() {
-    const q = document.getElementById("model-query").value;
-    const t = document.getElementById("model-type").value;
-    const p = new URLSearchParams({query: q, model_type: t, limit: "30"});
-    try {
-        const r = await fetch("/api/models/search?" + p.toString());
-        const d = await r.json();
-        renderModels(d.models || []);
-    } catch(e) {
-        document.getElementById("model-list").innerHTML = '<div style="color:#f44;padding:8px">Error: ' + e + '</div>';
+  const query = document.getElementById('hfQuery').value;
+  const type = document.getElementById('hfModelType').value;
+  try {
+    const r = await fetch(`${API}/api/models/search?query=${encodeURIComponent(query)}&model_type=${type}&limit=20`);
+    const data = await r.json();
+    const models = data.models || data.结果s || [];
+    const html = models.map(m =>
+      `<div class="model-item">
+        <div class="info">
+          <div class="name">${m.id || m.modelId || 'unknown'}</div>
+          <div class="desc">${(m.description || '').substring(0,100)}</div>
+          <div class="type">${m.pipeline_tag || m.type || ''}</div>
+        </div>
+        <button onclick="下载Model('${m.id || m.modelId}')" style="font-size:11px">下载</button>
+      </div>`
+    ).join('');
+    document.getElementById('modelList').innerHTML = html || '<div style="color:#666;padding:8px">No 结果s</div>';
+  } catch(e) { showToast('Search failed: '+e.message, '#ff4444'); }
+}
+
+async function 下载Model(id) {
+  try {
+    const r = await fetch(API + '/api/models/下载', { method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({model_id: id})
+    });
+    const data = await r.json();
+    showToast(data.success ? '下载 started: ' + id : 'Failed: ' + (data.error||''), data.success ? '#44ff88' : '#ff4444');
+  } catch(e) { showToast('Error: '+e.message, '#ff4444'); }
+}
+
+async function refreshLocalModels() {
+  try {
+    const r = await fetch(API + '/api/models/list');
+    const data = await r.json();
+    const models = data.models || [];
+    const html = models.map(m =>
+      `<div class="model-item">
+        <div class="info">
+          <div class="name">${m.id || m.modelId || 'unknown'}</div>
+          <div class="type">${m.type || m.pipeline_tag || ''}</div>
+          <div style="font-size:10px;color:#666">${m.local ? '? 下载ed' : '? Remote'}</div>
+        </div>
+      </div>`
+    ).join('');
+    document.getElementById('localModels').innerHTML = html || '<div style="color:#666;padding:8px">No local models</div>';
+  } catch(e) { console.error(e); }
+}
+
+// --- Tools ---
+async function refreshTools() {
+  try {
+    const r = await fetch(API + '/api/tools');
+    const data = await r.json();
+    allTools = data.data?.tools || [];
+    const sel = document.getElementById('toolSelector');
+    sel.innerHTML = '<option value="">选择一个工具...</option>' +
+      allTools.map(t => `<option value="${t.name}">${t.name}: ${(t.desc||'').substring(0,60)}</option>`).join('');
+  } catch(e) { console.error(e); }
+}
+
+async function callTool() {
+  const name = document.getElementById('toolSelector').value;
+  if (!name) { showToast('请选择工具', '#ffaa44'); return; }
+  let args = {};
+  try {
+    const argsStr = document.getElementById('toolArgs').value;
+    if (argsStr) args = JSON.parse(argsStr);
+  } catch { showToast('JSON 格式错误', '#ff4444'); return; }
+  
+  try {
+    const r = await fetch(API + '/api/tools/' + name, { method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify(args)
+    });
+    const data = await r.json();
+    document.getElementById('tool结果').textContent = JSON.stringify(data, null, 2);
+  } catch(e) { showToast('工具调用失败: '+e.message, '#ff4444'); }
+}
+
+// --- Init ---
+async function init() {
+  const online = await checkServer();
+  if (online) {
+    await refreshDashboard();
+    refreshLocalModels();
+    refreshTools();
+  }
+  // Poll every 10 seconds
+  setInterval(async () => {
+    const online = await checkServer();
+    if (online) {
+      const active = document.querySelector('.panel.active');
+      if (active && active.id === 'panel-dashboard') refreshDashboard();
+      if (active && active.id === 'panel-entities') refreshEntities();
     }
+  }, 10000);
 }
-function renderModels(ms) {
-    const c = document.getElementById("model-list");
-    if (!ms.length) { c.innerHTML = '<div style="color:#666;padding:8px;text-align:center">No models found</div>'; return; }
-    c.innerHTML = ms.map(m => {
-        const dl = m.status === "downloaded"
-            ? '<button onclick="selectModel(\''+m.type+'\',\''+esc(m.model_id)+'\')" style="background:#2a4;color:#fff;border:none;padding:2px 8px;border-radius:3px;cursor:pointer;font-size:10px">Select</button>'
-            : '<button onclick="downloadModel(\''+esc(m.model_id)+'\')" style="background:#48f;color:#fff;border:none;padding:2px 8px;border-radius:3px;cursor:pointer;font-size:10px">Download</button>';
-        return '<div style="background:#12122a;border:1px solid #1a1a4a;border-radius:4px;padding:6px 8px;margin:4px 0">' +
-            '<div style="display:flex;justify-content:space-between;align-items:center">' +
-            '<strong style="color:#e0e0e0;font-size:11px">' + esc(m.model_id) + '</strong>' + dl + '</div>' +
-            '<div style="color:#888;font-size:10px;margin-top:3px">Type: ' + m.type + ' | DL: ' + (m.downloads||0) +
-            (m.license ? ' | ' + esc(m.license) : '') + ' | ' + m.status + '</div></div>';
-    }).join("");
-}
-async function downloadModel(id) {
-    const r = await fetch("/api/models/download", {method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({model_id:id})});
-    const d = await r.json();
-    alert(d.success ? "Downloading: " + id : "Error: " + (d.error||"unknown"));
-    searchModels();
-}
-async function selectModel(t, id) {
-    const r = await fetch("/api/models/select", {method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({model_type:t,model_id:id})});
-    const d = await r.json();
-    if(d.success) alert("Selected " + id + " for " + t); else alert("Error: " + (d.error||""));
-    searchModels();
-}
-function esc(s) { return (s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/'/g,"&#39;"); }
-setInterval(async function(){
-    try {
-        const r = await fetch("/api/models/downloads");
-        const d = await r.json();
-        (d.downloads||[]).forEach(function(dl){
-            if(dl.status==="downloading"){
-                document.querySelectorAll("#model-list button").forEach(function(b){
-                    if(b.textContent==="Download") b.textContent = dl.progress.toFixed(0)+"%";
-                });
-            }
-        });
-    }catch(e){}
-}, 3000);
+
+init();
 </script>
-<script>
-async function searchModels() {
-    const query = document.getElementById("model-query").value;
-    const modelType = document.getElementById("model-type").value;
-    const params = new URLSearchParams({query, model_type: modelType, limit: "30"});
-    try {
-        const r = await fetch("/api/models/search?" + params.toString());
-        const d = await r.json();
-        renderModels(d.models || []);
-    } catch(e) {
-        document.getElementById("model-list").innerHTML = '<div style="color:#ff4444;padding:8px">Error: ' + e + '</div>';
-    }
-}
-function renderModels(models) {
-    const c = document.getElementById("model-list");
-    if (!models.length) {
-        c.innerHTML = '<div style="color:#666;padding:8px;text-align:center">No models found</div>';
-        return;
-    }
-    c.innerHTML = models.map(m => {
-        const isDownloaded = m.status === "downloaded";
-        const btn = isDownloaded
-            ? `<button onclick="selectModel('${m.type}','${m.model_id}')" style="background:#22aa44;color:white;border:none;padding:2px 8px;border-radius:3px;cursor:pointer;font-size:10px">Select</button>`
-            : `<button onclick="downloadModel('${m.model_id}')" style="background:#4488ff;color:white;border:none;padding:2px 8px;border-radius:3px;cursor:pointer;font-size:10px">Download</button>`;
-        const dlBadge = m.downloads > 1000 ? Math.floor(m.downloads/1000)+"k" : (m.downloads || "?");
-        return '<div style="background:#12122a;border:1px solid #1a1a4a;border-radius:4px;padding:6px 8px;margin:4px 0">' +
-            '<div style="display:flex;justify-content:space-between;align-items:center">' +
-            '<strong style="color:#e0e0e0;font-size:11px">' + escapeHtml(m.model_id) + '</strong>' +
-            btn + '</div>' +
-            '<div style="color:#888;font-size:10px;margin-top:3px">' +
-            'Type: ' + m.type + ' | Downloads: ' + dlBadge +
-            (m.license ? ' | License: ' + m.license : '') +
-            ' | Status: ' + m.status +
-            '</div></div>';
-    }).join("");
-}
-async function downloadModel(modelId) {
-    const r = await fetch("/api/models/download", {
-        method:"POST", headers:{"Content-Type":"application/json"},
-        body: JSON.stringify({model_id: modelId})
-    });
-    const d = await r.json();
-    alert(d.success ? "Download started: " + modelId : "Error: " + (d.error || "unknown"));
-    searchModels();
-}
-async function selectModel(type, modelId) {
-    const r = await fetch("/api/models/select", {
-        method:"POST", headers:{"Content-Type":"application/json"},
-        body: JSON.stringify({model_type: type, model_id: modelId})
-    });
-    const d = await r.json();
-    if (d.success) {
-        alert("Selected " + modelId + " for " + type + " generation");
-        searchModels();
-    }
-}
-function escapeHtml(s) {
-    if (!s) return "";
-    return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
-}
-// Refresh downloads periodically
-setInterval(async function(){
-    try {
-        const r = await fetch("/api/models/downloads");
-        const d = await r.json();
-        (d.downloads || []).forEach(dl => {
-            if (dl.status === "downloading") {
-                document.querySelectorAll("#model-list div button").forEach(b => {
-                    if (b.textContent === "Download") b.textContent = "..." + dl.progress + "%";
-                });
-            }
-        });
-    } catch(e){}
-}, 3000);
-</script></body>
+</body>
 </html>

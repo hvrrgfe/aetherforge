@@ -4,7 +4,7 @@
     <Border BorderBrush="{ThemeResource CardBackgroundFillColorDefault}" BorderThickness="1" CornerRadius="6" Padding="8">
         <StackPanel Spacing="4">
             <TextBlock x:Name="AgentNameText" FontWeight="Bold"/>
-            <TextBlock x:Name="StatusText" x:Uid="AgentStatusText" Foreground="Gray"/>
+            <TextBlock x:Name="StatusText" Foreground="Gray"/>
         </StackPanel>
     </Border>
 </UserControl>

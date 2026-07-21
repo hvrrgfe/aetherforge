@@ -1,53 +1,53 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="视图port" content="width=device-width, initial-scale=1.0">
 <title>AetherForge 3D</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 body{background:#0a0a0f;color:#e0e0e0;font:14px system-ui;display:flex;height:100vh;overflow:hidden;font-family:'Segoe UI',system-ui,sans-serif}
-#side{width:280px;background:#12121a;border-right:1px solid #2a2a3a;padding:12px;overflow-y:auto;font-size:12px}
-#side h2{font-size:14px;color:#8888cc;margin-bottom:8px}
-#side h3{font-size:12px;color:#8888cc;margin:10px 0 5px}
+#侧视{width:280px;background:#12121a;border-right:1px solid #2a2a3a;padding:12px;overflow-y:auto;font-size:12px}
+#侧视 h2{font-size:14px;color:#8888cc;margin-bottom:8px}
+#侧视 h3{font-size:12px;color:#8888cc;margin:10px 0 5px}
 .info{background:#1a1a26;padding:6px 10px;border-radius:4px;margin:3px 0;font-size:11px}
 .ent{background:#1a1a26;padding:4px 8px;border-radius:4px;margin:2px 0;font-size:11px;cursor:pointer;transition:background .2s}
 .ent:hover{background:#2a2a3a}
 .ent.selected{background:#2a2a5a;border:1px solid #446}
 .btn{background:#2a2a3a;border:1px solid #444;color:#ccc;padding:3px 10px;border-radius:4px;cursor:pointer;font-size:11px;margin:2px}
 .btn:hover{background:#3a3a4a}
-#view{flex:1;position:relative;overflow:hidden}
+#视图{flex:1;position:relative;overflow:hidden}
 #info3d{position:absolute;bottom:12px;left:12px;background:rgba(0,0,0,.75);padding:6px 12px;border-radius:4px;font:11px monospace;color:#aaccaa;pointer-events:none}
-#controls{position:absolute;top:12px;right:12px;display:flex;gap:4px}
+#controls{position:absolute;俯视:12px;right:12px;display:flex;gap:4px}
 select{background:#2a2a3a;color:#ccc;border:1px solid #444;border-radius:4px;font-size:11px;padding:2px 5px}
 </style>
 </head>
 <body>
-<div id="side">
+<div id="侧视">
   <h2>AetherForge 3D</h2>
   <div class="info">Tick: <span id="tick">0</span> | Time: <span id="gt">0.0</span>s</div>
-  <div class="info">Entities: <span id="ec">0</span> | Lights: <span id="lc">0</span></div>
-  <h3>View</h3>
+  <div class="info">实体: <span id="ec">0</span> | Lights: <span id="lc">0</span></div>
+  <h3>视图</h3>
   <div>
-    <button class="btn" onclick="resetCamera()">Reset Camera</button>
-    <button class="btn" onclick="toggleOrbit()">Orbit</button>
-    <button class="btn" onclick="toggleWireframe()">Wire</button>
-    <select onchange="setViewMode(this.value)">
-      <option value="perspective">Perspective</option>
-      <option value="top">Top</option>
-      <option value="side">Side</option>
-      <option value="free" selected>Free</option>
+    <button class="btn" onclick="resetCamera()">重置视角</button>
+    <button class="btn" onclick="toggle环绕()">环绕</button>
+    <button class="btn" onclick="toggle线框frame()">线框</button>
+    <select onchange="set视图Mode(this.value)">
+      <option value="透视">透视</option>
+      <option value="俯视">俯视</option>
+      <option value="侧视">侧视</option>
+      <option value="自由" selected>自由</option>
     </select>
   </div>
-  <h3>Entities</h3>
+  <h3>实体</h3>
   <div id="elist"></div>
 </div>
-<div id="view">
+<div id="视图">
   <div id="controls">
-    <button class="btn" onclick="fetch('/api/tools/pause',{method:'POST'})">Pause</button>
-    <button class="btn" onclick="fetch('/api/tools/resume',{method:'POST'})">Resume</button>
+    <button class="btn" onclick="fetch('/api/tools/暂停',{method:'POST'})">暂停</button>
+    <button class="btn" onclick="fetch('/api/tools/恢复',{method:'POST'})">恢复</button>
   </div>
-  <div id="info3d">Click entity to inspect</div>
+  <div id="info3d">点击实体查看详情</div>
 </div>
 
 <script type="importmap">
@@ -61,11 +61,11 @@ select{background:#2a2a3a;color:#ccc;border:1px solid #444;border-radius:4px;fon
 
 <script type="module">
 import * as THREE from "three";
-import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+import { 环绕Controls } from "three/addons/controls/环绕Controls.js";
 import { CSS2DRenderer, CSS2DObject } from "three/addons/renderers/CSS2DRenderer.js";
 
 // --- Setup ---
-const container = document.getElementById("view");
+const container = document.getElementById("视图");
 const w = container.clientWidth;
 const h = container.clientHeight;
 
@@ -73,7 +73,7 @@ const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x1a1a22);
 scene.fog = new THREE.Fog(0x1a1a22, 20, 50);
 
-const camera = new THREE.PerspectiveCamera(60, w / h, 0.1, 1000);
+const camera = new THREE.透视Camera(60, w / h, 0.1, 1000);
 camera.position.set(0, 5, 15);
 
 const renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -86,11 +86,11 @@ container.prepend(renderer.domElement);
 const labelRenderer = new CSS2DRenderer();
 labelRenderer.setSize(w, h);
 labelRenderer.domElement.style.position = "absolute";
-labelRenderer.domElement.style.top = "0";
+labelRenderer.domElement.style.俯视 = "0";
 labelRenderer.domElement.style.pointerEvents = "none";
 container.appendChild(labelRenderer.domElement);
 
-const controls = new OrbitControls(camera, renderer.domElement);
+const controls = new 环绕Controls(camera, renderer.domElement);
 controls.enableDamping = true;
 controls.dampingFactor = 0.1;
 controls.minDistance = 2;
@@ -160,7 +160,7 @@ function createMesh(meshData, name, entityType) {
     roughness: meshData.roughness || 0.8,
     transparent: meshData.transparent || false,
     opacity: meshData.opacity || 1.0,
-    wireframe: meshData.wireframe || false,
+    线框frame: meshData.线框frame || false,
   });
   const mesh = new THREE.Mesh(geo, mat);
   mesh.castShadow = true;
@@ -188,8 +188,8 @@ function updateScene(sceneState) {
   if (!sceneState) return;
   const currentIds = new Set();
 
-  // Update/create entities
-  for (const ent of sceneState.entities || []) {
+  // Update/create 实体
+  for (const ent of sceneState.实体 || []) {
     const eid = ent.id;
     currentIds.add(eid);
     let mesh = entityMeshes.get(eid);
@@ -228,12 +228,12 @@ function updateScene(sceneState) {
       mesh.material.emissive.setHex(colorStrToHex(md.emissive || "#000000"));
       if (md.metalness !== undefined) mesh.material.metalness = md.metalness;
       if (md.roughness !== undefined) mesh.material.roughness = md.roughness;
-      if (md.wireframe !== undefined) mesh.material.wireframe = md.wireframe;
+      if (md.线框frame !== undefined) mesh.material.线框frame = md.线框frame;
       mesh.material.needsUpdate = true;
     }
   }
 
-  // Remove stale entities
+  // Remove stale 实体
   for (const [eid, mesh] of entityMeshes) {
     if (!currentIds.has(eid)) {
       scene.remove(mesh);
@@ -249,13 +249,13 @@ function updateScene(sceneState) {
   // Update UI
   document.getElementById("tick").textContent = sceneState.tick || 0;
   document.getElementById("gt").textContent = (sceneState.game_time || 0).toFixed(1);
-  document.getElementById("ec").textContent = (sceneState.entities || []).length;
+  document.getElementById("ec").textContent = (sceneState.实体 || []).length;
   document.getElementById("lc").textContent = (sceneState.lights || []).length;
 
   // Entity list
   const list = document.getElementById("elist");
   list.innerHTML = "";
-  for (const ent of sceneState.entities || []) {
+  for (const ent of sceneState.实体 || []) {
     const d = document.createElement("div");
     d.className = "ent";
     d.textContent = `${ent.name || "?"} (${ent.type || "?"})`;
@@ -272,7 +272,7 @@ function updateScene(sceneState) {
 }
 
 // --- API polling ---
-let paused = false;
+let 暂停d = false;
 async function poll() {
   try {
     const resp = await fetch("/api/game-state-3d");
@@ -313,35 +313,35 @@ window.resetCamera = () => {
   controls.update();
 };
 
-window.toggleOrbit = () => {
+window.toggle环绕 = () => {
   controls.autoRotate = !controls.autoRotate;
 };
 
-window.toggleWireframe = () => {
+window.toggle线框frame = () => {
   for (const [_, mesh] of entityMeshes) {
     if (mesh.material) {
-      mesh.material.wireframe = !mesh.material.wireframe;
+      mesh.material.线框frame = !mesh.material.线框frame;
       mesh.material.needsUpdate = true;
     }
   }
 };
 
-window.setViewMode = (mode) => {
+window.set视图Mode = (mode) => {
   const dist = camera.position.distanceTo(controls.target);
   switch (mode) {
-    case "top":
+    case "俯视":
       camera.position.set(0, 20, 0.01);
       controls.target.set(0, 0, 0);
       break;
-    case "side":
+    case "侧视":
       camera.position.set(15, 2, 0);
       controls.target.set(0, 0, 0);
       break;
-    case "perspective":
+    case "透视":
       camera.position.set(8, 6, 12);
       controls.target.set(0, 0, 0);
       break;
-    default: // free - keep current
+    default: // 自由 - keep current
       break;
   }
   controls.update();
@@ -349,3 +349,4 @@ window.setViewMode = (mode) => {
 </script>
 </body>
 </html>
+

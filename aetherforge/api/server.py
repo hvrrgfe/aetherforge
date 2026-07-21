@@ -174,7 +174,8 @@ def create_server(world=None):
             return jsonify({"success": False, "error": "model_id required"}), 400
         result = model_mgr.delete_model(model_id)
         return jsonify(result)
-@app.route("/")
+
+    @app.route("/")
     def index():
         return send_from_directory(static_dir, "index.html")
 

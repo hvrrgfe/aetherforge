@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
@@ -17,7 +17,7 @@ public class VerificationViewModel : INotifyPropertyChanged
 {
     public ObservableCollection<CheckResultInfo> Checks { get; set; } = new();
 
-    private string _status = "Waiting";
+    private string _status = "等待中";
     private bool _commitAllowed = false;
     private string _blockingReason = "";
     private int _passedCount = 0;
@@ -35,7 +35,7 @@ public class VerificationViewModel : INotifyPropertyChanged
         if (checks == null) return;
         foreach (var c in checks)
         {
-            var name = c.ContainsKey("name") ? c["name"]?.ToString() ?? "check" : "check";
+            var name = c.ContainsKey("name") ? c["name"]?.ToString() ?? "检查项" : "检查项";
             var severity = c.ContainsKey("severity") ? c["severity"]?.ToString() ?? "pass" : "pass";
             var msg = c.ContainsKey("message") ? c["message"]?.ToString() ?? "" : "";
             Checks.Add(new CheckResultInfo { Name = name, Passed = severity == "pass", Message = msg });

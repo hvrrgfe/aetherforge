@@ -9,13 +9,12 @@
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
         <StackPanel Grid.Row="0" Orientation="Horizontal" Spacing="8">
-            <TextBox x:Name="TaskIdInput" PlaceholderText="Task ID" Width="300"/>
-            <Button Content="Load Evidence" Click="LoadEvidenceBtn_Click"/>
-            <Button x:Uid="CommitBtn" x:Name="CommitBtn" Content="Commit" Click="CommitBtn_Click"/>
-            <Button x:Uid="RollbackBtn" x:Name="RollbackBtn" Content="Rollback" Click="RollbackBtn_Click"/>
+            <TextBox x:Name="TaskIdInput" PlaceholderText="输入任务 ID" Width="300"/>
+            <Button Content="加载证据" Click="LoadEvidenceBtn_Click"/>
+            <Button x:Name="CommitBtn" Content="提交" Click="CommitBtn_Click"/>
+            <Button x:Name="RollbackBtn" Content="回滚" Click="RollbackBtn_Click"/>
         </StackPanel>
         <controls:EvidencePanel Grid.Row="1" x:Name="EvidencePanel" Margin="0,12"/>
         <controls:TransactionBar Grid.Row="2" x:Name="TxBar"/>
     </Grid>
 </Page>
-

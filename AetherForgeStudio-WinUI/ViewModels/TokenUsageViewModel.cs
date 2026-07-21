@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 
@@ -7,11 +7,11 @@ namespace AetherForgeStudio.ViewModels;
 public class TokenUsageViewModel : INotifyPropertyChanged
 {
     private int _usedTokens = 0;
-    private int _maxTokens = 30000;
+    private int _maxTokens = 4000;
     private int _agentCalls = 0;
-    private int _maxCalls = 30;
+    private int _maxCalls = 50;
     private double _cacheHitRate = 0;
-    private string _contextMode = "Incremental";
+    private string _contextMode = "增量";
 
     public int UsedTokens { get => _usedTokens; set { _usedTokens = value; OnPropertyChanged(); OnPropertyChanged(nameof(TokenPercent)); } }
     public int MaxTokens { get => _maxTokens; set { _maxTokens = value; OnPropertyChanged(); OnPropertyChanged(nameof(TokenPercent)); } }

@@ -8,9 +8,9 @@
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
         <StackPanel Grid.Row="0" Orientation="Horizontal" Spacing="8" Margin="0,0,0,12">
-            <TextBox x:Uid="GoalInput" x:Name="GoalInput" PlaceholderText="Enter task goal..." Width="400"/>
-            <Button x:Uid="StartTaskBtn" x:Name="StartTaskBtn" Content="Start Task" Click="StartTaskBtn_Click"/>
-            <Button x:Uid="RefreshStatusBtn" x:Name="RefreshStatusBtn" Content="Refresh" Click="RefreshStatusBtn_Click"/>
+            <TextBox x:Name="GoalInput" PlaceholderText="输入任务目标..." Width="400"/>
+            <Button x:Name="StartTaskBtn" Content="开始任务" Click="StartTaskBtn_Click"/>
+            <Button x:Name="RefreshStatusBtn" Content="刷新状态" Click="RefreshStatusBtn_Click"/>
         </StackPanel>
         <Grid Grid.Row="1" ColumnSpacing="12">
             <Grid.ColumnDefinitions>
@@ -18,20 +18,19 @@
                 <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
             <StackPanel Grid.Column="0" Spacing="8">
-                <TextBlock x:Uid="TaskProgressLabel" Text="Task Progress" Style="{StaticResource TitleTextBlockStyle}"/>
-                <ProgressBar x:Uid="TaskProgress" x:Name="TaskProgress"/>
-                <TextBlock x:Uid="StatusText" x:Name="StatusText" Text="No active task"/>
-                <TextBlock x:Uid="PhaseText" x:Name="PhaseText"/>
+                <TextBlock Text="任务进度" Style="{StaticResource TitleTextBlockStyle}"/>
+                <ProgressBar x:Name="TaskProgress"/>
+                <TextBlock x:Name="StatusText" Text="暂无活动任务"/>
+                <TextBlock x:Name="PhaseText"/>
             </StackPanel>
             <StackPanel Grid.Column="1" Spacing="8">
-                <TextBlock x:Uid="AgentStatusLabel" Text="Agent Status" Style="{StaticResource TitleTextBlockStyle}"/>
-                <controls:AgentStatusCard x:Name="ExplorerCard" AgentName="Explorer"/>
-                <controls:AgentStatusCard x:Name="PlannerCard" AgentName="Planner"/>
-                <controls:AgentStatusCard x:Name="BuilderCard" AgentName="Builder"/>
-                <controls:AgentStatusCard x:Name="VerifierCard" AgentName="Verifier"/>
-                <controls:AgentStatusCard x:Name="CriticCard" AgentName="Critic"/>
+                <TextBlock Text="Agent 状态" Style="{StaticResource TitleTextBlockStyle}"/>
+                <controls:AgentStatusCard x:Name="ExplorerCard" AgentName="探索者"/>
+                <controls:AgentStatusCard x:Name="PlannerCard" AgentName="规划者"/>
+                <controls:AgentStatusCard x:Name="BuilderCard" AgentName="构建者"/>
+                <controls:AgentStatusCard x:Name="VerifierCard" AgentName="验证者"/>
+                <controls:AgentStatusCard x:Name="CriticCard" AgentName="审查者"/>
             </StackPanel>
         </Grid>
     </Grid>
 </Page>
-
