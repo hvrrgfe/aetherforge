@@ -1,4 +1,4 @@
-﻿"""AI Music Generation Engine - auto-detect available models, user-selectable.
+"""AI Music Generation Engine - auto-detect available models, user-selectable.
 
 Auto-detects:
   - MusicGen variants (small/medium/large/melody)
@@ -72,6 +72,7 @@ class MusicGenEngine:
         self._loaded = False
         self._disabled = False
         self._generated = {}
+        self._resolved_path = None
         self._output_dir = Path(__file__).parent.parent / "assets" / "generated"
         self._output_dir.mkdir(parents=True, exist_ok=True)
         self._config = get_config().music_gen
@@ -107,10 +108,12 @@ class MusicGenEngine:
         self._current_model_name = name_or_path
         self._resolved_path = resolved
         self._loaded = False
+        self._model = None
         return {"success": True, "model": name_or_path, "path": resolved, "loaded": False}
 
     def init(self, force=False):
-        """Non-blocking init. Only checks torch, no network."""
+        """Initialize music gen engine. Checks torch and imports audiocraft.
+        Model is loaded lazily on first generate() call."""
         if self._loaded and not force:
             return True
         if not self._config.enabled:
@@ -122,10 +125,33 @@ class MusicGenEngine:
             return False
         try:
             import audiocraft
+            from audiocraft.models import MusicGen
+            _ = MusicGen
             self._loaded = True
             return True
         except ImportError:
             self._disabled = True
+            return False
+        except Exception:
+            self._disabled = True
+            return False
+
+    def _ensure_model_loaded(self):
+        """Actually load the MusicGen model from cache or network."""
+        if self._model is not None:
+            return True
+        try:
+            from audiocraft.models import MusicGen
+            model_id = getattr(self, '_resolved_path', None) or self._config.model_id
+            if model_id and model_id != 'auto':
+                self._model = MusicGen.get_pretrained(model_id, device=self._config.device)
+            else:
+                self._model = MusicGen.get_pretrained(self._config.model_id, device=self._config.device)
+            self._loaded = True
+            return True
+        except Exception as ex:
+            self._disabled = True
+            self._error = str(ex)
             return False
 
     def generate_music(self, description, duration=8.0, name=None):
@@ -134,6 +160,10 @@ class MusicGenEngine:
 
         if not self._loaded:
             return {"success": False, "error": "Model not loaded (check network or see README)"}
+
+        if self._model is None:
+            if not self._ensure_model_loaded():
+                return {"success": False, "error": f"Model load failed: {getattr(self, '_error', 'unknown')}"}
 
         try:
             self._model.set_generation_params(duration=duration)
@@ -178,6 +208,7 @@ class MusicGenEngine:
         models = self.list_available_models()
         return {
             "loaded": self._loaded,
+            "model_loaded": self._model is not None,
             "disabled": self._disabled,
             "current_model": self._current_model_name,
             "available_models": list(models.keys()),

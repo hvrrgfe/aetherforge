@@ -1,4 +1,4 @@
-﻿"""AetherForge API Server - Flask-based REST API for AI control."""
+"""AetherForge API Server - Flask-based REST API for AI control."""
 import sys, os, json
 from flask import Flask, request, jsonify, send_from_directory
 from aetherforge.core.world_model import WorldModel
@@ -101,7 +101,80 @@ def create_server(world=None):
         state["game_time"] = world.game_time
         return jsonify(state)
 
-    @app.route("/")
+    
+    # ==================== Model Management API ====================
+
+    @app.route("/api/models/search", methods=["GET"])
+    def search_models():
+        """Search models from Hugging Face by type and query."""
+        from aetherforge.tools.model_manager import model_mgr
+        query = request.args.get("query", "")
+        model_type = request.args.get("model_type", "")
+        limit = int(request.args.get("limit", "30"))
+        result = model_mgr.search_online_models(query, model_type, limit)
+        return jsonify(result)
+
+    @app.route("/api/models/list", methods=["GET"])
+    def list_models():
+        """List all known and locally downloaded models."""
+        from aetherforge.tools.model_manager import model_mgr
+        model_type = request.args.get("model_type", "")
+        results = model_mgr.list_all_models(model_type)
+        return jsonify({"success": True, "count": len(results), "models": results})
+
+    @app.route("/api/models/download", methods=["POST"])
+    def download_model():
+        """Start downloading a model in background."""
+        from aetherforge.tools.model_manager import model_mgr
+        data = request.get_json(silent=True) or {}
+        model_id = data.get("model_id", "")
+        if not model_id:
+            return jsonify({"success": False, "error": "model_id required"}), 400
+        result = model_mgr.download_selected_model(model_id)
+        return jsonify(result)
+
+    @app.route("/api/models/downloads", methods=["GET"])
+    def model_downloads():
+        """Get current download progress."""
+        from aetherforge.tools.model_manager import model_mgr
+        return jsonify({"downloads": model_mgr.get_model_downloads()})
+
+    @app.route("/api/models/select", methods=["POST"])
+    def select_model():
+        """Select a downloaded model for generation."""
+        from aetherforge.tools.model_manager import model_mgr
+        data = request.get_json(silent=True) or {}
+        model_type = data.get("model_type", "")
+        model_id = data.get("model_id", "")
+        if not model_type or not model_id:
+            return jsonify({"success": False, "error": "model_type and model_id required"}), 400
+        result = model_mgr.select_generated_model(model_type, model_id)
+        return jsonify(result)
+
+    @app.route("/api/models/selected", methods=["GET"])
+    def selected_models():
+        """Get currently selected models."""
+        from aetherforge.tools.model_manager import model_mgr
+        return jsonify(model_mgr.get_selected_models())
+
+    @app.route("/api/models/info/<path:model_id>", methods=["GET"])
+    def model_info(model_id):
+        """Get detailed info about a specific model."""
+        from aetherforge.tools.model_manager import model_mgr
+        result = model_mgr.model_info(model_id)
+        return jsonify(result)
+
+    @app.route("/api/models/delete", methods=["POST"])
+    def delete_model():
+        """Delete a locally downloaded model."""
+        from aetherforge.tools.model_manager import model_mgr
+        data = request.get_json(silent=True) or {}
+        model_id = data.get("model_id", "")
+        if not model_id:
+            return jsonify({"success": False, "error": "model_id required"}), 400
+        result = model_mgr.delete_model(model_id)
+        return jsonify(result)
+@app.route("/")
     def index():
         return send_from_directory(static_dir, "index.html")
 

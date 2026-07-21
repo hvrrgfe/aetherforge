@@ -1,0 +1,10 @@
+<UserControl x:Class="AetherForgeStudio.Controls.AgentStatusCard"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Border BorderBrush="{ThemeResource CardBackgroundFillColorDefault}" BorderThickness="1" CornerRadius="6" Padding="8">
+        <StackPanel Spacing="4">
+            <TextBlock x:Name="AgentNameText" FontWeight="Bold"/>
+            <TextBlock x:Name="StatusText" x:Uid="AgentStatusText" Foreground="Gray"/>
+        </StackPanel>
+    </Border>
+</UserControl>

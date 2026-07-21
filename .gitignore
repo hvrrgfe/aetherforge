@@ -66,3 +66,20 @@ mvnw.cmd
 flatlaf-*.jar
 META-INF/
 com/formdev/
+# WinUI build artifacts
+AetherForgeStudio-WinUI/bin/
+AetherForgeStudio-WinUI/obj/
+AetherForgeStudio-WinUI/*.user
+AetherForgeStudio-WinUI/LaunchProfile.json
+
+# Standalone EXE at root
+/AetherForgeStudio.exe
+
+# Python cache
+__pycache__/
+*.pyc
+.pytest_cache/
+*.egg-info/
+
+# Temp files
+dist/
