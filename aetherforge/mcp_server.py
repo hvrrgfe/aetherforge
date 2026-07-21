@@ -140,6 +140,7 @@ async def main():
     parser = argparse.ArgumentParser(description="AetherForge MCP Server")
     parser.add_argument("--proxy", action="store_true", help="Proxy mode: connect to Flask")
     parser.add_argument("--port", type=int, default=7890, help="Flask port (proxy only)")
+    parser.add_argument("--checkpoint-interval", type=int, default=60, help="Auto-save interval in ticks")
     args = parser.parse_args()
 
     if args.checkpoint_interval < 0:
@@ -148,13 +149,13 @@ async def main():
         print("  [WARN] --proxy mode is deprecated. Direct mode is now the default and recommended.", flush=True)
         print("  [WARN] Falling back to direct mode (no Flask needed).", flush=True)
     # Direct mode (always)
-        w, e, r = build_direct_engine(checkpoint_interval=args.checkpoint_interval)
-        _ENGINE["world"] = w
-        _ENGINE["tools"] = e
-        _ENGINE["runtime"] = r
-        print(f"AetherForge MCP Server v{get_config().version} (direct mode)", flush=True)
-        _TOOL_DEF_CACHE[:] = _build_tool_defs(_ENGINE['tools'])
-        print(f"  {len(_TOOL_DEF_CACHE)} tools from engine reflection, no Flask needed", flush=True)
+    w, e, r = build_direct_engine(checkpoint_interval=args.checkpoint_interval)
+    _ENGINE["world"] = w
+    _ENGINE["tools"] = e
+    _ENGINE["runtime"] = r
+    print(f"AetherForge MCP Server v{get_config().version} (direct mode)", flush=True)
+    _TOOL_DEF_CACHE[:] = _build_tool_defs(_ENGINE['tools'])
+    print(f"  {len(_TOOL_DEF_CACHE)} tools from engine reflection, no Flask needed", flush=True)
 
     print("  Waiting for MCP client...", flush=True)
     async with mcp.server.stdio.stdio_server() as (rs, ws):

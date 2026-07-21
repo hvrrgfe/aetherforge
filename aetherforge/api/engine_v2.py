@@ -16,7 +16,6 @@ from aetherforge.tools.model_manager import model_mgr
 
 class EngineToolsV2(EngineTools):
     """Extended engine tools with Physics, Audio, 3D, and AI capabilities."""
-    """Extended engine tools with Physics, Audio, 3D, and AI capabilities."""
 
     def __init__(self, world: Any, runtime: Optional[Any] = None) -> None:
         super().__init__(world)
