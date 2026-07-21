@@ -1,31 +1,36 @@
-﻿"""EngineTools V2 - extends EngineTools with physics, audio, 3D, and AI tools.
+"""EngineTools V2 - extends EngineTools with physics, audio, 3D, and AI tools.
 
 All tools return ToolResult for consistent MCP/API access.
 """
 import sys, os, json
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from aetherforge.api.tools import EngineTools, ToolResult
+from aetherforge.api.tools import EngineTools, ToolResult, tool
+from typing import Optional, Any
 from aetherforge.runtime.physics import PhysicsEngine
 from aetherforge.runtime.audio import AudioEngine
 from aetherforge.renderer import SceneGraph3D, MeshData, Transform3D, Vector3, Light3D, Camera3D
 from aetherforge.ai_engines.image_gen import ImageGenEngine
 from aetherforge.ai_engines.music_gen import MusicGenEngine
 from aetherforge.config import get_config
+from aetherforge.tools.model_manager import model_mgr
 
 
 class EngineToolsV2(EngineTools):
     """Extended engine tools with Physics, Audio, 3D, and AI capabilities."""
+    """Extended engine tools with Physics, Audio, 3D, and AI capabilities."""
 
-    def __init__(self, world):
+    def __init__(self, world: Any, runtime: Optional[Any] = None) -> None:
         super().__init__(world)
+        self.runtime = runtime
         self.physics = PhysicsEngine(world)
         self.audio = AudioEngine()
         self.scene_3d = SceneGraph3D(world)
         self.image_gen = ImageGenEngine()
         self.music_gen = MusicGenEngine()
+        self._discover_tools()  # rediscover V2 tools
 
     # ==================== PHYSICS TOOLS ====================
 
+    @tool(desc="Initialize physics engine (pymunk)")
     def init_physics(self):
         try:
             self.physics.init()
@@ -33,6 +38,7 @@ class EngineToolsV2(EngineTools):
         except Exception as ex:
             return ToolResult(False, error=str(ex))
 
+    @tool(desc="Add physics body to entity")
     def add_physics_body(self, entity_id, shape="box", width=32, height=32,
                           mass=1.0, dynamic=True, friction=0.5, elasticity=0.2):
         pos = None
@@ -45,22 +51,27 @@ class EngineToolsV2(EngineTools):
                                         position=pos)
         return ToolResult(result.get("success", False), data=result)
 
+    @tool(desc="Remove physics body")
     def remove_physics_body(self, entity_id):
         ok = self.physics.remove_body(entity_id)
         return ToolResult(ok, {"entity_id": entity_id}) if ok else ToolResult(False, error=f"Body {entity_id} not found")
 
+    @tool(desc="Apply force to physics body")
     def apply_force(self, entity_id, fx=0.0, fy=0.0):
         ok = self.physics.apply_force(entity_id, fx, fy)
         return ToolResult(True, {"entity_id": entity_id, "force": {"x": fx, "y": fy}}) if ok else ToolResult(False, error="Body not found")
 
+    @tool(desc="Set gravity vector")
     def set_gravity(self, gx=0.0, gy=980.0):
         ok = self.physics.set_gravity(gx, gy)
         return ToolResult(True, {"gravity": {"x": gx, "y": gy}})
 
+    @tool(desc="Cast ray and return first hit")
     def ray_cast(self, start_x, start_y, end_x, end_y):
         hit_id = self.physics.ray_cast(start_x, start_y, end_x, end_y)
         return ToolResult(True, {"hit_entity_id": hit_id, "start": {"x": start_x, "y": start_y}, "end": {"x": end_x, "y": end_y}})
 
+    @tool(desc="Get physics body info")
     def get_physics_info(self, entity_id):
         info = self.physics.get_body_info(entity_id)
         if info:
@@ -69,6 +80,7 @@ class EngineToolsV2(EngineTools):
 
     # ==================== AUDIO TOOLS ====================
 
+    @tool(desc="Initialize audio engine (pygame)")
     def init_audio(self):
         try:
             self.audio.init()
@@ -76,22 +88,27 @@ class EngineToolsV2(EngineTools):
         except Exception as ex:
             return ToolResult(False, error=str(ex))
 
+    @tool(desc="Load sound file")
     def load_sound(self, name, file_path):
         ok = self.audio.load_sound(name, file_path)
         return ToolResult(True, {"name": name, "path": file_path}) if ok else ToolResult(False, error=f"Failed to load sound: {name}")
 
+    @tool(desc="Play loaded sound")
     def play_sound(self, name, volume=1.0, loops=0, pan=0.0):
         result = self.audio.play_sound(name, volume, loops, pan)
         return ToolResult(result.get("success", False), data=result)
 
+    @tool(desc="Play background music")
     def play_music(self, name, file_path=None, volume=None, loop=True, fade_ms=0):
         result = self.audio.play_music(name, file_path, volume, loop, fade_ms)
         return ToolResult(result.get("success", False), data=result)
 
+    @tool(desc="Stop background music")
     def stop_music(self, fade_ms=0):
         result = self.audio.stop_music(fade_ms)
         return ToolResult(result.get("success", False), data=result)
 
+    @tool(desc="Set master volume")
     def set_audio_volume(self, master=None, music=None, sfx=None):
         if master is not None:
             self.audio.set_master_volume(master)
@@ -101,11 +118,13 @@ class EngineToolsV2(EngineTools):
             self.audio.set_sfx_volume(sfx)
         return ToolResult(True, {"master": self.audio._volume, "music": self.audio._music_volume, "sfx": self.audio._sfx_volume})
 
+    @tool(desc="Get audio engine state")
     def get_audio_state(self):
         return ToolResult(True, self.audio.get_state())
 
     # ==================== 3D TOOLS ====================
 
+    @tool(desc="Set 3D mesh for entity")
     def set_3d_mesh(self, entity_id, geometry="box", color="#888888",
                      texture="", emissive="#000000", metalness=0.0,
                      roughness=0.8, transparent=False, opacity=1.0,
@@ -116,6 +135,7 @@ class EngineToolsV2(EngineTools):
         self.scene_3d.set_mesh(entity_id, md)
         return ToolResult(True, {"entity_id": entity_id, "mesh": md.to_dict()})
 
+    @tool(desc="Set 3D transform")
     def set_3d_transform(self, entity_id, x=0.0, y=0.0, z=0.0,
                           rx=0.0, ry=0.0, rz=0.0, sx=1.0, sy=1.0, sz=1.0):
         tf = Transform3D(position=Vector3(x, y, z),
@@ -124,6 +144,7 @@ class EngineToolsV2(EngineTools):
         self.scene_3d.set_transform(entity_id, tf)
         return ToolResult(True, {"entity_id": entity_id, "transform": tf.to_dict()})
 
+    @tool(desc="Add 3D light source")
     def add_3d_light(self, light_type="directional", color="#ffffff",
                       intensity=1.0, px=0.0, py=10.0, pz=10.0, shadow=False):
         light = Light3D(light_type=light_type, color=color, intensity=intensity,
@@ -131,6 +152,7 @@ class EngineToolsV2(EngineTools):
         idx = self.scene_3d.add_light(light)
         return ToolResult(True, {"light_index": idx, "light": light.to_dict()})
 
+    @tool(desc="Set 3D camera position/target")
     def set_3d_camera(self, px=0.0, py=0.0, pz=10.0, tx=0.0, ty=0.0, tz=0.0,
                        fov=60.0, orthographic=False):
         cam = Camera3D(position=Vector3(px, py, pz), target=Vector3(tx, ty, tz),
@@ -138,6 +160,7 @@ class EngineToolsV2(EngineTools):
         self.scene_3d.set_camera(cam)
         return ToolResult(True, {"camera": cam.to_dict()})
 
+    @tool(desc="Get full 3D scene state")
     def get_3d_state(self):
         state = self.scene_3d.get_3d_state()
         state["tick"] = self.world.tick
@@ -146,6 +169,7 @@ class EngineToolsV2(EngineTools):
 
     # ==================== AI IMAGE GEN TOOLS ====================
 
+    @tool(desc="Initialize AI image generation (diffusers)")
     def init_image_gen(self):
         try:
             ok = self.image_gen.init()
@@ -153,6 +177,7 @@ class EngineToolsV2(EngineTools):
         except Exception as ex:
             return ToolResult(True, {"ready": False, "error": str(ex)})
 
+    @tool(desc="Generate image from prompt")
     def generate_image(self, prompt, negative_prompt="", width=512, height=512,
                         steps=20, guidance_scale=7.5, seed=-1, name=None):
         result = self.image_gen.generate(prompt, negative_prompt, width, height,
@@ -167,6 +192,7 @@ class EngineToolsV2(EngineTools):
             "error": result.get("error"),
         }, error=result.get("error") if not ok else None)
 
+    @tool(desc="Generate texture for entity")
     def generate_texture(self, prompt, entity_type="object", style="realistic",
                           width=512, height=512, name=None):
         result = self.image_gen.generate_texture(prompt, entity_type, style, width, height, name)
@@ -178,6 +204,7 @@ class EngineToolsV2(EngineTools):
             "error": result.get("error"),
         }, error=result.get("error") if not ok else None)
 
+    @tool(desc="List available image models")
     def list_image_models(self):
         """List all available image generation models (local + HF cache + known)."""
         models = self.image_gen.list_available_models()
@@ -188,6 +215,7 @@ class EngineToolsV2(EngineTools):
             "count": len(models),
         })
 
+    @tool(desc="Select active image model")
     def select_image_model(self, name_or_path):
         """Switch image generation model by name or path.
         
@@ -208,6 +236,7 @@ class EngineToolsV2(EngineTools):
 
     # ==================== AI MUSIC GEN TOOLS ====================
 
+    @tool(desc="Initialize AI music generation (audiocraft)")
     def init_music_gen(self):
         try:
             ok = self.music_gen.init()
@@ -215,6 +244,7 @@ class EngineToolsV2(EngineTools):
         except Exception as ex:
             return ToolResult(True, {"ready": False, "error": str(ex)})
 
+    @tool(desc="Generate music from prompt")
     def generate_music(self, description, duration=8.0, name=None):
         result = self.music_gen.generate_music(description, duration, name)
         ok = result.get("success", False)
@@ -226,6 +256,7 @@ class EngineToolsV2(EngineTools):
             "error": result.get("error"),
         }, error=result.get("error") if not ok else None)
 
+    @tool(desc="Generate sound effect")
     def generate_sound_effect(self, description, duration=2.0, name=None):
         result = self.music_gen.generate_sound_effect(description, duration, name)
         ok = result.get("success", False)
@@ -236,6 +267,7 @@ class EngineToolsV2(EngineTools):
             "error": result.get("error"),
         }, error=result.get("error") if not ok else None)
 
+    @tool(desc="List available music models")
     def list_music_models(self):
         """List all available music generation models."""
         models = self.music_gen.list_available_models()
@@ -246,6 +278,7 @@ class EngineToolsV2(EngineTools):
             "count": len(models),
         })
 
+    @tool(desc="Select active music model")
     def select_music_model(self, name_or_path):
         """Switch music generation model by name or path.
         
@@ -266,11 +299,79 @@ class EngineToolsV2(EngineTools):
 
     # ==================== UTILITY TOOLS ====================
 
+    # === RUNTIME TOOLS ===
+
+    @tool(desc="Advance game simulation by one frame")
+    def tick(self, dt=0.016):
+        if self.runtime:
+            self.runtime.tick(dt)
+            return ToolResult(True, {"tick": self.world.tick})
+        return ToolResult(False, error="Runtime not initialized")
+
+    @tool(desc="Set player input state")
+    def set_player_input(self, up=False, down=False, left=False, right=False):
+        if self.runtime:
+            self.runtime.set_player_input(up=up, down=down, left=left, right=right)
+            return ToolResult(True, {})
+        return ToolResult(False, error="Runtime not initialized")
+
+    @tool(desc="Player interacts with entities in range")
+    def player_interact(self):
+        if self.runtime:
+            r = self.runtime.player_interact()
+            return ToolResult(r.get("success", False), data=r)
+        return ToolResult(False, error="Runtime not initialized")
+
+    @tool(desc="Execute a single game step")
+    def step(self):
+        if self.runtime:
+            self.runtime.tick(1.0 / 60.0)
+            return ToolResult(True, {"tick": self.world.tick})
+        return ToolResult(False, error="Runtime not initialized")
+
+    @tool(desc="Pause game simulation")
+    def pause(self):
+        if self.runtime:
+            self.runtime.pause()
+            return ToolResult(True, {})
+        return ToolResult(False, error="Runtime not initialized")
+
+    @tool(desc="Resume game simulation")
+    def resume(self):
+        if self.runtime:
+            self.runtime.resume()
+            return ToolResult(True, {})
+        return ToolResult(False, error="Runtime not initialized")
+
+    @tool(desc="Set simulation speed multiplier")
+    def set_time_scale(self, scale=1.0):
+        if self.runtime:
+            self.runtime.set_time_scale(scale)
+            return ToolResult(True, {"time_scale": scale})
+        return ToolResult(False, error="Runtime not initialized")
+
+    @tool(desc="Quick-modify entity without validation")
+    def modify_entity_quick(self, entity_id="", changes=None):
+        if not entity_id:
+            return ToolResult(False, error="entity_id required")
+        changes = changes or {}
+        ok = self.world.quick_modify_entity(entity_id, changes)
+        return ToolResult(ok, {"entity_id": entity_id})
+
+    @tool(desc="Quick-remove entity without validation")
+    def remove_entity_quick(self, entity_id=""):
+        if not entity_id:
+            return ToolResult(False, error="entity_id required")
+        ok = self.world.quick_remove_entity(entity_id)
+        return ToolResult(ok, {"entity_id": entity_id})
+
+    @tool(desc="List all AI-generated assets")
     def list_generated_assets(self):
         images = self.image_gen.list_assets()
         music = self.music_gen.list_assets()
         return ToolResult(True, {"images": images, "music": music})
 
+    @tool(desc="Get all subsystem status")
     def get_engine_info(self):
         """Return full engine status with all subsystem states."""
         img_state = self.image_gen.get_state()
@@ -293,40 +394,46 @@ class EngineToolsV2(EngineTools):
             "scene_3d": {"entities": len(self.scene_3d.meshes), "lights": len(self.scene_3d.lights)},
         })
 
-    # Override list_tools to include V2 tools
-    def list_tools(self):
-        base = super().list_tools().data.get("tools", [])
-        v2_tools = [
-            {"name": "init_physics", "desc": "Initialize physics engine"},
-            {"name": "add_physics_body", "desc": "Add physics body to entity"},
-            {"name": "remove_physics_body", "desc": "Remove physics body"},
-            {"name": "apply_force", "desc": "Apply force to physics body"},
-            {"name": "set_gravity", "desc": "Set world gravity"},
-            {"name": "ray_cast", "desc": "Cast ray and find first hit"},
-            {"name": "get_physics_info", "desc": "Get physics body info"},
-            {"name": "init_audio", "desc": "Initialize audio engine"},
-            {"name": "load_sound", "desc": "Register a sound file"},
-            {"name": "play_sound", "desc": "Play a sound effect"},
-            {"name": "play_music", "desc": "Play background music"},
-            {"name": "stop_music", "desc": "Stop background music"},
-            {"name": "set_audio_volume", "desc": "Set audio volume levels"},
-            {"name": "get_audio_state", "desc": "Get audio engine status"},
-            {"name": "set_3d_mesh", "desc": "Set 3D mesh for entity"},
-            {"name": "set_3d_transform", "desc": "Set 3D transform for entity"},
-            {"name": "add_3d_light", "desc": "Add light to 3D scene"},
-            {"name": "set_3d_camera", "desc": "Set 3D camera"},
-            {"name": "get_3d_state", "desc": "Get full 3D scene state"},
-            {"name": "init_image_gen", "desc": "Initialize image generation"},
-            {"name": "generate_image", "desc": "Generate image from prompt"},
-            {"name": "generate_texture", "desc": "Generate texture from prompt"},
-            {"name": "list_image_models", "desc": "List available image generation models"},
-            {"name": "select_image_model", "desc": "Switch image generation model by name or path"},
-            {"name": "init_music_gen", "desc": "Initialize music generation"},
-            {"name": "generate_music", "desc": "Generate music from description"},
-            {"name": "generate_sound_effect", "desc": "Generate SFX from description"},
-            {"name": "list_music_models", "desc": "List available music generation models"},
-            {"name": "select_music_model", "desc": "Switch music generation model by name or path"},
-            {"name": "list_generated_assets", "desc": "List AI-generated assets"},
-            {"name": "get_engine_info", "desc": "Get full engine status info"},
-        ]
-        return ToolResult(True, {"tools": base + v2_tools})
+    # ==================== MODEL MANAGER TOOLS ====================
+
+    @tool(desc="List all models (image+music) with download status")
+    def list_all_models(self, model_type=""):
+        """List all available models (image+music) with download status"""
+        from aetherforge.tools.model_manager import model_mgr
+        models = model_mgr.list_models(model_type)
+        return ToolResult(True, {"count": len(models), "models": models})
+
+    @tool(desc="Download a model from HuggingFace (background, non-blocking)")
+    def download_model(self, name_or_path=""):
+        """Download model from HuggingFace (background, non-blocking)"""
+        if not name_or_path:
+            return ToolResult(False, error="Model name required")
+        from aetherforge.tools.model_manager import model_mgr
+        result = model_mgr.download(name_or_path)
+        return ToolResult(result.get("success", False), data=result)
+
+    @tool(desc="Delete a downloaded model from local storage")
+    def delete_model(self, name=""):
+        """Remove downloaded model from local storage"""
+        if not name:
+            return ToolResult(False, error="Model name required")
+        from aetherforge.tools.model_manager import model_mgr
+        result = model_mgr.delete_model(name)
+        return ToolResult(result.get("success", False), data=result)
+
+    @tool(desc="Check current download progress")
+    def get_download_status(self):
+        """Check current download progress"""
+        from aetherforge.tools.model_manager import model_mgr
+        progress = model_mgr.download_progress()
+        return ToolResult(True, {"downloads": progress})
+
+    @tool(desc="Get detailed info about a specific model")
+    def model_info(self, name=""):
+        """Get detailed info about a specific model"""
+        from aetherforge.tools.model_manager import model_mgr
+        result = model_mgr.model_info(name)
+        return ToolResult(result.get("success", False), data=result.get("data", result))
+
+
+    

@@ -1,25 +1,36 @@
-﻿'''
+'''
 AI Control Tools - all callable operations for the engine.
 '''
-import json, sys
-sys.path.insert(0, '.')
+import json, sys, inspect
+from typing import Optional, Any, Dict
 from aetherforge.core import SemanticEntity, Rule, Quest, QuestStep, NPCBehavior
 from aetherforge.core import RuleTriggerType, BehaviorType
 
+
+
+def tool(desc=""):
+    """Decorator: mark a method as a callable tool with description."""
+    def decorator(func):
+        func.__tool_desc__ = desc
+        return func
+    return decorator
 class ToolResult:
-    def __init__(self, ok=True, data=None, error=None):
-        self.success = ok
-        self.data = data or {}
-        self.error = error
-    def to_dict(self):
+    """Unified return type for all engine tools."""
+    def __init__(self, ok: bool = True, data: Optional[Dict] = None, error: Optional[str] = None) -> None:
+        self.success: bool = ok
+        self.data: Dict = data or {}
+        self.error: Optional[str] = error
+    def to_dict(self) -> Dict:
         return {'success': self.success, 'data': self.data, 'error': self.error}
-    def to_json(self):
+    def to_json(self) -> str:
         return json.dumps(self.to_dict(), ensure_ascii=False, indent=2)
 
 class EngineTools:
     def __init__(self, world):
         self.world = world
+        self._tool_cache = None
 
+    @tool(desc="Create semantically-described entity")
     def create_entity(self, semantic_type='generic', name='', description='',
                       capabilities=None, requires=None, state=None,
                       relationships=None, position=None, size=None,
@@ -40,6 +51,7 @@ class EngineTools:
         except Exception as ex:
             return ToolResult(False, error=str(ex))
 
+    @tool(desc="Modify entity properties")
     def modify_entity(self, entity_id, changes):
         ok = self.world.modify_entity(entity_id, changes)
         if ok:
@@ -47,16 +59,19 @@ class EngineTools:
             return ToolResult(True, {'entity_id': entity_id, 'entity': ent.to_dict() if ent else {}})
         return ToolResult(False, error=f'Entity {entity_id} not found')
 
+    @tool(desc="Remove entity")
     def remove_entity(self, entity_id):
         ok = self.world.remove_entity(entity_id)
         return ToolResult(ok, {'entity_id': entity_id}) if ok else ToolResult(False, error=f'Entity {entity_id} not found')
 
+    @tool(desc="Get entity details")
     def get_entity(self, entity_id):
         ent = self.world.get_entity(entity_id)
         if ent:
             return ToolResult(True, ent.to_dict())
         return ToolResult(False, error=f'Entity {entity_id} not found')
 
+    @tool(desc="Query entities by type/tag/capability")
     def find_entities(self, query='', **filters):
         if query:
             results = self.world.query(query)
@@ -64,6 +79,7 @@ class EngineTools:
             results = self.world.find_entities(**filters)
         return ToolResult(True, {'count': len(results), 'entities': [e.to_dict() for e in results]})
 
+    @tool(desc="Create game rule (when/then)")
     def create_rule(self, when=None, then=None, else_actions=None,
                     trigger_type='interaction', cooldown=0.0, priority=0):
         try:
@@ -76,10 +92,12 @@ class EngineTools:
         except Exception as ex:
             return ToolResult(False, error=str(ex))
 
+    @tool(desc="Remove game rule")
     def remove_rule(self, rule_id):
         ok = self.world.remove_rule(rule_id)
         return ToolResult(ok, {'rule_id': rule_id}) if ok else ToolResult(False, error=f'Rule {rule_id} not found')
 
+    @tool(desc="Create quest with steps")
     def create_quest(self, name='', description='', steps=None,
                      rewards=None, prerequisites=None):
         try:
@@ -91,14 +109,17 @@ class EngineTools:
         except Exception as ex:
             return ToolResult(False, error=str(ex))
 
+    @tool(desc="Complete a quest step")
     def complete_quest_step(self, quest_id, step_id):
         ok = self.world.complete_quest_step(quest_id, step_id)
         return ToolResult(ok, {'quest_id': quest_id, 'step_id': step_id}) if ok else ToolResult(False, error='Step not found')
 
+    @tool(desc="Update quest state (active/completed/failed)")
     def update_quest_state(self, quest_id, state):
         ok = self.world.update_quest_state(quest_id, state)
         return ToolResult(ok, {'quest_id': quest_id, 'state': state}) if ok else ToolResult(False, error='Quest not found')
 
+    @tool(desc="Set NPC behavior")
     def set_behavior(self, entity_id, behavior_type='goal_oriented',
                      goals=None, fallback='idle', speed=60.0, perception_range=200.0):
         try:
@@ -110,80 +131,88 @@ class EngineTools:
         except Exception as ex:
             return ToolResult(False, error=str(ex))
 
+    @tool(desc="Set weather (clear/rainy/stormy/snowy)")
     def set_weather(self, weather):
         self.world.set_weather(weather)
         return ToolResult(True, {'weather': weather})
 
+    @tool(desc="Set player entity by ID")
     def set_player(self, entity_id):
         ok = self.world.set_player(entity_id)
         return ToolResult(True, {'player_entity_id': entity_id}) if ok else ToolResult(False, error=f'Entity {entity_id} not found')
 
+    @tool(desc="Trigger game event")
     def trigger_event(self, event_type, event_data=None):
         from aetherforge.core.rules import RuleEngine
         re = RuleEngine(self.world)
         results = re.evaluate(event_type, event_data or {})
         return ToolResult(True, {'event_type': event_type, 'rules_fired': len(results), 'results': results})
 
+    @tool(desc="Read project summary")
     def read_project(self):
         return ToolResult(True, {'summary': self.world.summary, 'snapshot': self.world.snapshot().to_dict()})
 
+    @tool(desc="Get full world snapshot as JSON")
     def observe(self, include_logs=True):
         d = self.world.snapshot().to_dict()
         if not include_logs:
             d['logs'] = []
         return ToolResult(True, d)
 
+    @tool(desc="Commit changes to world")
     def commit_change(self):
         self.world.commit()
         return ToolResult(True, {'message': 'Changes committed'})
 
+    @tool(desc="Rollback last change")
     def rollback_change(self):
         ok = self.world.rollback()
         return ToolResult(ok, {'message': 'Rolled back'}) if ok else ToolResult(False, error='No checkpoint')
 
+    @tool(desc="Configure audio settings")
     def set_audio(self, config):
         cid = self.world.set_audio_config(config)
         return ToolResult(True, {'audio_config_id': cid, 'config': config})
 
+    @tool(desc="Set art direction intent")
     def set_art_intent(self, intent):
         aid = self.world.set_art_intent(intent)
         return ToolResult(True, {'art_intent_id': aid, 'intent': intent})
 
+    def _discover_tools(self):
+        """Cache tool list from @tool decorated methods via reflection."""
+        tools = []
+        for _name, _method in inspect.getmembers(self, predicate=inspect.ismethod):
+            _desc = getattr(_method, '__tool_desc__', None)
+            if _desc is not None:
+                tools.append({'name': _name, 'desc': _desc})
+        self._tool_cache = tools
     def list_tools(self):
-        return ToolResult(True, {'tools': [
-            {'name':'create_entity','desc':'Create semantically-described entity'},
-            {'name':'modify_entity','desc':'Modify entity properties'},
-            {'name':'remove_entity','desc':'Remove entity'},
-            {'name':'get_entity','desc':'Get entity details'},
-            {'name':'find_entities','desc':'Query entities'},
-            {'name':'create_rule','desc':'Create game rule'},
-            {'name':'remove_rule','desc':'Remove game rule'},
-            {'name':'create_quest','desc':'Create quest'},
-            {'name':'complete_quest_step','desc':'Complete quest step'},
-            {'name':'update_quest_state','desc':'Update quest state (active/completed/failed)'},
-            {'name':'set_behavior','desc':'Set NPC behavior'},
-            {'name':'set_weather','desc':'Set weather'},
-            {'name':'set_player','desc':'Set player entity'},
-            {'name':'read_project','desc':'Read project summary'},
-            {'name':'trigger_event','desc':'Trigger game event'},
-            {'name':'commit_change','desc':'Commit changes'},
-            {'name':'rollback_change','desc':'Rollback changes'},
-            {'name':'set_audio','desc':'Configure audio'},
-            {'name':'set_art_intent','desc':'Set art intent'},
-            {'name':'observe','desc':'Get world snapshot'},
-            {'name':'list_tools','desc':'List all tools'},
-            {'name':'save_project','desc':'Save project to file'},
-            {'name':'load_project','desc':'Load project from file'},
-        ]})
+        """Return cached tool list, lazy-discover if needed."""
+        if self._tool_cache is None:
+            self._discover_tools()
+        return ToolResult(True, {'tools': (self._tool_cache or [])})
 
+    @tool(desc="Save project to file path")
     def save_project(self, path):
+        from aetherforge.tools import validate_project_path as _vpp
+        ok, err = _vpp(path)
+        if not ok:
+            return ToolResult(False, error=err)
         try:
             self.world.save_to_file(path)
             return ToolResult(True, {'path': path})
         except Exception as ex:
             return ToolResult(False, error=str(ex))
 
+    @tool(desc="Load project from file path")
     def load_project(self, path):
+        from aetherforge.tools import validate_project_path as _vpp
+        ok, err = _vpp(path)
+        if not ok:
+            return ToolResult(False, error=err)
+        if not os.path.exists(os.path.normpath(path)):
+            return ToolResult(False, error='File not found')
         try:
             self.world.load_from_file(path)
             return ToolResult(True, {'path': path, 'summary': self.world.summary})

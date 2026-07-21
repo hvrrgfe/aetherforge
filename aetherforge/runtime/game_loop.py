@@ -2,16 +2,17 @@
 Game Runtime - drives the game loop, NPC AI, and physics.
 '''
 import math, random, sys
-sys.path.insert(0, '.')
 from aetherforge.core import BehaviorType
 
 class GameRuntime:
-    def __init__(self, world):
+    def __init__(self, world, checkpoint_interval=60):
         self.world = world
         self.paused = False
         self.time_scale = 1.0
         self._input = {'up':False,'down':False,'left':False,'right':False}
         self._npcs = {}
+        self._checkpoint_interval = checkpoint_interval  # auto-checkpoint every N ticks
+        self._tick_counter = 0
 
     def start(self):
         self.paused = False
@@ -23,6 +24,9 @@ class GameRuntime:
             return self.world.snapshot()
         dt = dt * self.time_scale
         self.world.tick_world()
+        self._tick_counter += 1
+        if self._tick_counter % self._checkpoint_interval == 0:
+            self.world.commit()
         self._move_player(dt)
         self._process_npcs(dt)
         return self.world.snapshot()
