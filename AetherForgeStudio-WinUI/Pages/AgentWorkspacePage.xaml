@@ -1,0 +1,37 @@
+﻿<Page x:Class="AetherForgeStudio.Pages.AgentWorkspacePage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="using:AetherForgeStudio.Controls">
+    <Grid Padding="16">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+        <StackPanel Grid.Row="0" Orientation="Horizontal" Spacing="8" Margin="0,0,0,12">
+            <TextBox x:Uid="GoalInput" x:Name="GoalInput" PlaceholderText="Enter task goal..." Width="400"/>
+            <Button x:Uid="StartTaskBtn" x:Name="StartTaskBtn" Content="Start Task" Click="StartTaskBtn_Click"/>
+            <Button x:Uid="RefreshStatusBtn" x:Name="RefreshStatusBtn" Content="Refresh" Click="RefreshStatusBtn_Click"/>
+        </StackPanel>
+        <Grid Grid.Row="1" ColumnSpacing="12">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="2*"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            <StackPanel Grid.Column="0" Spacing="8">
+                <TextBlock x:Uid="TaskProgressLabel" Text="Task Progress" Style="{StaticResource TitleTextBlockStyle}"/>
+                <ProgressBar x:Uid="TaskProgress" x:Name="TaskProgress"/>
+                <TextBlock x:Uid="StatusText" x:Name="StatusText" Text="No active task"/>
+                <TextBlock x:Uid="PhaseText" x:Name="PhaseText"/>
+            </StackPanel>
+            <StackPanel Grid.Column="1" Spacing="8">
+                <TextBlock x:Uid="AgentStatusLabel" Text="Agent Status" Style="{StaticResource TitleTextBlockStyle}"/>
+                <controls:AgentStatusCard x:Name="ExplorerCard" AgentName="Explorer"/>
+                <controls:AgentStatusCard x:Name="PlannerCard" AgentName="Planner"/>
+                <controls:AgentStatusCard x:Name="BuilderCard" AgentName="Builder"/>
+                <controls:AgentStatusCard x:Name="VerifierCard" AgentName="Verifier"/>
+                <controls:AgentStatusCard x:Name="CriticCard" AgentName="Critic"/>
+            </StackPanel>
+        </Grid>
+    </Grid>
+</Page>
+

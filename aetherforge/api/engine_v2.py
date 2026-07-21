@@ -392,47 +392,430 @@ class EngineToolsV2(EngineTools):
             "world": self.world.summary,
             "scene_3d": {"entities": len(self.scene_3d.meshes), "lights": len(self.scene_3d.lights)},
         })
+    # ==================== AGENT RUNTIME TOOLS ====================
+    # High-level tools for the Agent Runtime.
+    # External models should use these instead of low-level tools.
 
-    # ==================== MODEL MANAGER TOOLS ====================
+    def _get_orchestrator(self):
+        if not hasattr(self, '_agent_orch'):
+            from aetherforge.agents.orchestrator import AgentOrchestrator
+            from aetherforge.agents.state import AgentStateManager
+            from aetherforge.agents.policies import AgentPolicy, TokenBudget
+            from aetherforge.validation.evidence import EvidenceStore
+            from aetherforge.validation.commit_gate import CommitGate, GatePolicy
+            from aetherforge.agents.gateway import ToolGateway
+            from aetherforge.runtime.permissions import PermissionManager
+            sm = AgentStateManager()
+            es = EvidenceStore()
+            cg = CommitGate(GatePolicy.NORMAL)
+            gw = ToolGateway(self, evidence_store=es)
+            self._agent_orch = AgentOrchestrator(
+                self.world, gw, es, cg, sm,
+                policy=AgentPolicy(token_budget=TokenBudget(max_tokens=4000))
+            )
+            self._agent_evidence = es
+            self._agent_gateway = gw
+        return self._agent_orch
 
-    @tool(desc="List all models (image+music) with download status")
+    @tool(desc="Start a new Agent Runtime task with a natural language goal")
+    def agent_start_task(self, goal, constraints=None, approval_mode="high_risk"):
+        """Start an agent task. Returns task_id and status."""
+        try:
+            orch = self._get_orchestrator()
+            result = orch.start_task(goal, constraints, approval_mode)
+            return ToolResult(True, data=result)
+        except Exception as ex:
+            return ToolResult(False, error=str(ex))
+
+    @tool(desc="Get current status of an agent task")
+    def agent_get_status(self, task_id):
+        """Get task status including phase, progress, and check counts."""
+        try:
+            orch = self._get_orchestrator()
+            result = orch.get_status(task_id)
+            if result:
+                return ToolResult(True, data=result)
+            return ToolResult(False, error=f"Task {task_id} not found")
+        except Exception as ex:
+            return ToolResult(False, error=str(ex))
+
+    @tool(desc="Get comprehensive report for an agent task")
+    def agent_get_report(self, task_id):
+        """Get comprehensive report including evidence, transactions, and checks."""
+        try:
+            orch = self._get_orchestrator()
+            result = orch.get_report(task_id)
+            return ToolResult(True, data=result)
+        except Exception as ex:
+            return ToolResult(False, error=str(ex))
+
+    @tool(desc="Get evidence chain for an agent task")
+    def agent_get_evidence(self, task_id):
+        """Get all evidence collected during a task."""
+        try:
+            orch = self._get_orchestrator()
+            result = orch.get_evidence(task_id)
+            return ToolResult(True, data={"evidence": result, "count": len(result)})
+        except Exception as ex:
+            return ToolResult(False, error=str(ex))
+
+    @tool(desc="Request human approval for a blocked task")
+    def agent_request_approval(self, task_id, message=""):
+        """Request human approval when task is blocked."""
+        try:
+            orch = self._get_orchestrator()
+            result = orch.request_approval(task_id, message)
+            return ToolResult(True, data=result)
+        except Exception as ex:
+            return ToolResult(False, error=str(ex))
+
+    @tool(desc="Commit an agent task transaction")
+    def agent_commit(self, task_id, committer="agent"):
+        """Commit the active transaction for a task through the Commit Gate."""
+        try:
+            orch = self._get_orchestrator()
+            result = orch.commit_task(task_id, committer)
+            return ToolResult(result.get("success", False), data=result)
+        except Exception as ex:
+            return ToolResult(False, error=str(ex))
+
+    @tool(desc="Rollback an agent task transaction")
+    def agent_rollback(self, task_id):
+        """Rollback the active transaction for a task."""
+        try:
+            orch = self._get_orchestrator()
+            result = orch.rollback_task(task_id)
+            return ToolResult(True, data=result)
+        except Exception as ex:
+            return ToolResult(False, error=str(ex))
+
+    @tool(desc="Run a full agent cycle (explore-plan-build-verify-review-commit)")
+    def agent_run_full(self, goal, constraints=None):
+        """Start and run a complete agent workflow for a goal."""
+        try:
+            orch = self._get_orchestrator()
+            start = orch.start_task(goal, constraints)
+            task_id = start.get("task_id", "")
+            result = orch.run_full_cycle(task_id)
+            return ToolResult(result.get("success", False), data=result)
+        except Exception as ex:
+            return ToolResult(False, error=str(ex))
+
+    @tool(desc="Run agent workflow with auto-repair loop")
+    def agent_run_with_repair(self, goal, constraints=None, max_attempts=3):
+        """Start and run agent workflow with automatic repair on failure."""
+        try:
+            orch = self._get_orchestrator()
+            start = orch.start_task(goal, constraints)
+            task_id = start.get("task_id", "")
+            result = orch.run_with_repair(task_id, max_attempts)
+            return ToolResult(result.get("success", False), data=result)
+        except Exception as ex:
+            return ToolResult(False, error=str(ex))
+
+    @tool(desc="Configure Model Router settings (endpoint, api_key, model)")
+    def agent_configure_router(self, endpoint="", api_key="", model_name="", max_tokens=0):
+        """Configure the Model Router connection settings."""
+        from aetherforge.config import get_config, save_config
+        cfg = get_config()
+        if endpoint:
+            cfg.agent.endpoint = endpoint.rstrip("/")
+        if api_key:
+            cfg.agent.api_key = api_key
+        if model_name:
+            cfg.agent.model_name = model_name
+        if max_tokens > 0:
+            cfg.agent.max_tokens_per_task = max_tokens
+        cfg.agent.enabled = True
+        path = save_config(cfg)
+        return ToolResult(True, data={
+            "status": "saved",
+            "config_file": path,
+            "endpoint": cfg.agent.endpoint,
+            "model": cfg.agent.model_name,
+        })
+
+    @tool(desc="Show current Model Router configuration")
+    def agent_show_router_config(self):
+        """Display the current Model Router configuration (masking api_key)."""
+        from aetherforge.config import get_config
+        cfg = get_config().agent
+        key_masked = (cfg.api_key[:8] + "..." + cfg.api_key[-4:]) if len(cfg.api_key) > 12 else ("***" if cfg.api_key else "")
+        return ToolResult(True, data={
+            "enabled": cfg.enabled,
+            "endpoint": cfg.endpoint,
+            "api_key_masked": key_masked,
+            "model_name": cfg.model_name,
+            "max_tokens_per_task": cfg.max_tokens_per_task,
+            "policy": cfg.default_policy,
+            "approval_mode": cfg.approval_mode,
+        })
+
+
+    @tool(desc="Get world summary (low token cost)")
+    def observe_summary(self):
+        """Return a compact world summary with entity/rule/quest counts."""
+        try:
+            w = self.world
+            summary = getattr(w, "summary", {})
+            return ToolResult(True, data=summary)
+        except Exception as ex:
+            return ToolResult(False, error=str(ex))
+
+    @tool(desc="Get world changes since a given revision")
+    def observe_changes(self, since_revision=0):
+        """Return delta changes since the given revision."""
+        try:
+            orch = self._get_orchestrator()
+            snapshots = getattr(orch, "_snapshots", None)
+            if not snapshots:
+                return ToolResult(False, error="No snapshot manager available")
+            latest = snapshots.get_latest()
+            if not latest:
+                return ToolResult(True, data={"changes": [], "message": "No snapshots yet"})
+            before = snapshots.get(since_revision) if since_revision > 0 else snapshots.get_before(latest.revision)
+            if not before:
+                return ToolResult(True, data={"changes": [], "message": f"No snapshot at revision {since_revision}"})
+            diff = snapshots.diff(before.revision, latest.revision)
+            return ToolResult(True, data={"changes": diff, "current_revision": latest.revision})
+        except Exception as ex:
+            return ToolResult(False, error=str(ex))
+
+    @tool(desc="Get detailed entity data by id")
+    def observe_entity(self, entity_id=""):
+        """Return detailed data for a single entity."""
+        try:
+            if not entity_id:
+                return ToolResult(False, error="entity_id required")
+            w = self.world
+            entities = getattr(w, "entities", {})
+            entity = entities.get(entity_id) if isinstance(entities, dict) else None
+            if not entity:
+                return ToolResult(False, error=f"Entity {entity_id} not found")
+            if hasattr(entity, "to_dict"):
+                data = entity.to_dict()
+            elif isinstance(entity, dict):
+                data = dict(entity)
+            else:
+                data = str(entity)
+            return ToolResult(True, data={"entity_id": entity_id, "data": data})
+        except Exception as ex:
+            return ToolResult(False, error=str(ex))
+
+    @tool(desc="Apply a batch world patch (atomic)")
+    def apply_world_patch(self, patch_json=""):
+        """Apply multiple operations atomically within a transaction.
+        Format: {"transaction_id": "...", "operations": [{"op": "...", "data": {...}}, ...]}
+        Supported ops: create_entity, modify_entity, remove_entity
+        Max 20 operations per patch.
+        """
+        try:
+            import json
+            patch = json.loads(patch_json) if isinstance(patch_json, str) else patch_json
+            ops = patch.get("operations", [])
+            if len(ops) > 20:
+                return ToolResult(False, error=f"Too many operations: {len(ops)} (max 20)")
+            tx_id = patch.get("transaction_id", "")
+            w = self.world
+            results = []
+            all_ok = True
+            # Take checkpoint before any operations for atomic rollback
+            has_checkpoint = hasattr(w, "_checkpoint")
+            if has_checkpoint:
+                w._checkpoint()
+            for op in ops:
+                op_type = op.get("op", "")
+                data = op.get("data", {})
+                try:
+                    if op_type == "create_entity":
+                        from aetherforge.core import SemanticEntity
+                        e = SemanticEntity.from_dict(data) if isinstance(data, dict) else data
+                        eid = getattr(w, "quick_create_entity", w.create_entity)(e)
+                        results.append({"op": op_type, "id": eid, "success": True})
+                    elif op_type == "modify_entity":
+                        eid = data.pop("entity_id", "")
+                        ok = getattr(w, "quick_modify_entity", w.modify_entity)(eid, data)
+                        results.append({"op": op_type, "id": eid, "success": bool(ok)})
+                        if not ok:
+                            all_ok = False
+                            break
+                    elif op_type == "remove_entity":
+                        eid = data.get("entity_id", data.get("id", ""))
+                        ok = getattr(w, "quick_remove_entity", w.remove_entity)(eid)
+                        results.append({"op": op_type, "id": eid, "success": bool(ok)})
+                        if not ok:
+                            all_ok = False
+                            break
+                    else:
+                        results.append({"op": op_type, "success": False, "error": f"Unknown op: {op_type}"})
+                        all_ok = False
+                        break
+                except Exception as e:
+                    results.append({"op": op_type, "success": False, "error": str(e)})
+                    all_ok = False
+                    break
+            # Atomic rollback on failure
+            if not all_ok and has_checkpoint:
+                w.rollback()
+                for r in results:
+                    r["rolled_back"] = True
+            return ToolResult(all_ok, data={"operations": results, "transaction_id": tx_id, "atomic": True})
+        except Exception as ex:
+            return ToolResult(False, error=str(ex))
+
+    @tool(desc="Diff two world revisions")
+    def diff_world(self, revision_a=0, revision_b=0):
+        """Show structural diff between two world revisions."""
+        try:
+            if revision_a <= 0 or revision_b <= 0:
+                return ToolResult(False, error="Both revision_a and revision_b required")
+            orch = self._get_orchestrator()
+            snapshots = getattr(orch, "_snapshots", None)
+            if not snapshots:
+                return ToolResult(False, error="No snapshot manager")
+            result = snapshots.diff(revision_a, revision_b)
+            if result is None:
+                return ToolResult(False, error=f"Snapshots for {revision_a} or {revision_b} not found")
+            return ToolResult(True, data=result)
+        except Exception as ex:
+            return ToolResult(False, error=str(ex))
+
+    @tool(desc="Submit a human suggestion")
+    def agent_submit_suggestion(self, suggestion_json=""):
+        """Submit a structured human suggestion.
+        Format: {"target": {"type": "scene", "id": "..."}, "content": "...", "intent": "..."}
+        """
+        try:
+            import json
+            from aetherforge.agents.suggestions import SuggestionManager
+            sug = json.loads(suggestion_json) if isinstance(suggestion_json, str) else suggestion_json
+            mgr = SuggestionManager()
+            sug_obj = mgr.create_suggestion(
+                author="user",
+                target=sug.get("target", {}),
+                content=sug.get("content", ""),
+                intent=sug.get("intent", ""),
+                constraints=sug.get("constraints", []),
+            )
+            candidates = mgr.generate_candidates(sug_obj) if sug.get("generate_candidates", False) else []
+            return ToolResult(True, data={
+                "suggestion_id": sug_obj.id,
+                "status": sug_obj.status,
+                "candidates": [c.to_dict() for c in candidates] if candidates else [],
+            })
+        except Exception as ex:
+            return ToolResult(False, error=str(ex))
+
+
+    @tool(desc="Search models from Hugging Face by type and query")
+    def search_models(self, query="", model_type="", limit=30):
+        """Search for AI models on Hugging Face. model_type: image/music/audio"""
+        try:
+            from aetherforge.tools.model_manager import model_mgr
+            result = model_mgr.search_online_models(query, model_type, limit)
+            return ToolResult(result.get("success", False), data=result)
+        except Exception as ex:
+            return ToolResult(False, error=str(ex))
+
+    @tool(desc="List all known and locally downloaded models")
     def list_all_models(self, model_type=""):
-        """List all available models (image+music) with download status"""
-        from aetherforge.tools.model_manager import model_mgr
-        models = model_mgr.list_models(model_type)
-        return ToolResult(True, {"count": len(models), "models": models})
+        """List all models (local + known registry), optionally filtered by type."""
+        try:
+            from aetherforge.tools.model_manager import model_mgr
+            results = model_mgr.list_all_models(model_type)
+            return ToolResult(True, data={"count": len(results), "models": results})
+        except Exception as ex:
+            return ToolResult(False, error=str(ex))
 
-    @tool(desc="Download a model from HuggingFace (background, non-blocking)")
-    def download_model(self, name_or_path=""):
-        """Download model from HuggingFace (background, non-blocking)"""
-        if not name_or_path:
-            return ToolResult(False, error="Model name required")
-        from aetherforge.tools.model_manager import model_mgr
-        result = model_mgr.download(name_or_path)
-        return ToolResult(result.get("success", False), data=result)
+    @tool(desc="Download a model from Hugging Face in background")
+    def download_selected_model(self, model_id=""):
+        """Start downloading a model in background thread."""
+        try:
+            if not model_id:
+                return ToolResult(False, error="model_id required")
+            from aetherforge.tools.model_manager import model_mgr
+            result = model_mgr.download_selected_model(model_id)
+            return ToolResult(result.get("success", False), data=result)
+        except Exception as ex:
+            return ToolResult(False, error=str(ex))
 
-    @tool(desc="Delete a downloaded model from local storage")
-    def delete_model(self, name=""):
-        """Remove downloaded model from local storage"""
-        if not name:
-            return ToolResult(False, error="Model name required")
-        from aetherforge.tools.model_manager import model_mgr
-        result = model_mgr.delete_model(name)
-        return ToolResult(result.get("success", False), data=result)
+    @tool(desc="Get current model download progress")
+    def get_model_downloads(self):
+        """Get progress for all active model downloads."""
+        try:
+            from aetherforge.tools.model_manager import model_mgr
+            return ToolResult(True, data={"downloads": model_mgr.get_model_downloads()})
+        except Exception as ex:
+            return ToolResult(False, error=str(ex))
 
-    @tool(desc="Check current download progress")
-    def get_download_status(self):
-        """Check current download progress"""
-        from aetherforge.tools.model_manager import model_mgr
-        progress = model_mgr.download_progress()
-        return ToolResult(True, {"downloads": progress})
+    @tool(desc="Select a downloaded model for generation")
+    def select_generated_model(self, model_type="", model_id=""):
+        """Select which model to use for image/music/audio generation."""
+        try:
+            if not model_type or not model_id:
+                return ToolResult(False, error="model_type and model_id required")
+            from aetherforge.tools.model_manager import model_mgr
+            result = model_mgr.select_generated_model(model_type, model_id)
+            return ToolResult(result.get("success", False), data=result)
+        except Exception as ex:
+            return ToolResult(False, error=str(ex))
+
+    @tool(desc="Delete a downloaded model")
+    def delete_model(self, model_id=""):
+        """Delete a locally downloaded model."""
+        try:
+            if not model_id:
+                return ToolResult(False, error="model_id required")
+            from aetherforge.tools.model_manager import model_mgr
+            result = model_mgr.delete_model(model_id)
+            return ToolResult(result.get("success", False), data=result)
+        except Exception as ex:
+            return ToolResult(False, error=str(ex))
 
     @tool(desc="Get detailed info about a specific model")
-    def model_info(self, name=""):
-        """Get detailed info about a specific model"""
-        from aetherforge.tools.model_manager import model_mgr
-        result = model_mgr.model_info(name)
-        return ToolResult(result.get("success", False), data=result.get("data", result))
+    def model_info(self, model_id=""):
+        """Get detailed info for a model by model_id."""
+        try:
+            if not model_id:
+                return ToolResult(False, error="model_id required")
+            from aetherforge.tools.model_manager import model_mgr
+            result = model_mgr.model_info(model_id)
+            return ToolResult(result.get("success", False), data=result)
+        except Exception as ex:
+            return ToolResult(False, error=str(ex))
 
 
-    
+    @tool(desc="Detect network and select fastest AI model source")
+    def detect_model_network(self, refresh=True):
+        """Test all configured model sources and select the fastest available one."""
+        try:
+            from aetherforge.tools.network import network_manager
+            result = network_manager.detect(background=False)
+            return ToolResult(result.get("success", False), data=result,
+                              error=result.get("error", ""))
+        except Exception as ex:
+            return ToolResult(False, error=str(ex))
+
+    @tool(desc="Get current AI model source and network status")
+    def get_model_network_state(self):
+        """Get current network state, active source, and operation mode."""
+        try:
+            from aetherforge.tools.network import network_manager
+            return ToolResult(True, data=network_manager.state())
+        except Exception as ex:
+            return ToolResult(False, error=str(ex))
+
+    @tool(desc="Manually switch AI model source by endpoint URL")
+    def switch_model_source(self, endpoint=""):
+        """Switch to a configured model source by its endpoint URL.
+        Example: https://hf-mirror.com or https://huggingface.co
+        """
+        try:
+            if not endpoint:
+                return ToolResult(False, error="endpoint required")
+            from aetherforge.tools.network import network_manager
+            result = network_manager.switch_source(endpoint)
+            return ToolResult(result.get("success", False), data=result,
+                              error=result.get("error", ""))
+        except Exception as ex:
+            return ToolResult(False, error=str(ex))

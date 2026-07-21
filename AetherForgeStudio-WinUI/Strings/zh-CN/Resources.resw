@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root xml:space="preserve">
+    <data name="Nav_Dashboard.[content]" xml:space="preserve">
+        <value>仪表盘</value>
+    </data>
+    <data name="Nav_AgentWorkbench.[content]" xml:space="preserve">
+        <value>Agent 工作台</value>
+    </data>
+    <data name="Nav_WorldViewer.[content]" xml:space="preserve">
+        <value>世界查看器</value>
+    </data>
+    <data name="Nav_Verification.[content]" xml:space="preserve">
+        <value>验证中心</value>
+    </data>
+    <data name="StatusBar.[content]" xml:space="preserve">
+        <value>就绪</value>
+    </data>
+    <data name="DashboardTitle.[content]" xml:space="preserve">
+        <value>世界仪表盘</value>
+    </data>
+    <data name="EntityLabel.[content]" xml:space="preserve">
+        <value>实体</value>
+    </data>
+    <data name="RuleLabel.[content]" xml:space="preserve">
+        <value>规则</value>
+    </data>
+    <data name="QuestLabel.[content]" xml:space="preserve">
+        <value>任务</value>
+    </data>
+    <data name="RevisionLabel.[content]" xml:space="preserve">
+        <value>版本</value>
+    </data>
+    <data name="RefreshBtn.[content]" xml:space="preserve">
+        <value>刷新</value>
+    </data>
+    <data name="GoalInput.[content]" xml:space="preserve">
+        <value>输入任务目标...</value>
+    </data>
+    <data name="StartTaskBtn.[content]" xml:space="preserve">
+        <value>开始任务</value>
+    </data>
+    <data name="RefreshStatusBtn.[content]" xml:space="preserve">
+        <value>刷新</value>
+    </data>
+    <data name="TaskProgressLabel.[content]" xml:space="preserve">
+        <value>任务进度</value>
+    </data>
+    <data name="StatusText.[content]" xml:space="preserve">
+        <value>暂无活跃任务</value>
+    </data>
+    <data name="AgentStatusLabel.[content]" xml:space="preserve">
+        <value>Agent 状态</value>
+    </data>
+    <data name="TaskIdLabel.[content]" xml:space="preserve">
+        <value>任务 ID</value>
+    </data>
+    <data name="LoadEvidenceBtn.[content]" xml:space="preserve">
+        <value>加载证据</value>
+    </data>
+    <data name="CommitBtn.[content]" xml:space="preserve">
+        <value>提交</value>
+    </data>
+    <data name="RollbackBtn.[content]" xml:space="preserve">
+        <value>回滚</value>
+    </data>
+    <data name="NoTransactionText.[content]" xml:space="preserve">
+        <value>无活跃事务</value>
+    </data>
+    <data name="RevisionText.[content]" xml:space="preserve">
+        <value>版本: {0}</value>
+    </data>
+    <data name="EvidenceTitle.[content]" xml:space="preserve">
+        <value>证据链</value>
+    </data>
+    <data name="AgentStatusText.[content]" xml:space="preserve">
+        <value>空闲</value>
+    </data>
+    <data name="AssetsTitle.[content]" xml:space="preserve">
+        <value>资源</value>
+    </data>
+    <data name="EntitiesTitle.[content]" xml:space="preserve">
+        <value>实体</value>
+    </data>
+    <data name="QuestsTitle.[content]" xml:space="preserve">
+        <value>任务</value>
+    </data>
+    <data name="RulesTitle.[content]" xml:space="preserve">
+        <value>规则</value>
+    </data>
+    <data name="WorldTitle.[content]" xml:space="preserve">
+        <value>世界树</value>
+    </data>
+    <data name="VerificationTitle.[content]" xml:space="preserve">
+        <value>验证报告</value>
+    </data>
+</root>

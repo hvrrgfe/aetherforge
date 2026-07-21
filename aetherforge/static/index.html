@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
@@ -28,6 +28,24 @@ canvas{display:block;width:100%;height:100%}
     <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> Move<br>
     <kbd>Space</kbd> / <kbd>J</kbd> Action<br>
     <kbd>E</kbd> Interact<br>
+<div id="model-section" style="margin-top:16px;border-top:1px solid #1a1a3a;padding-top:12px">
+  <h3 style="font-size:13px;color:#4488ff;margin-bottom:8px">AI Models</h3>
+  <div style="display:flex;gap:4px;margin-bottom:8px">
+    <select id="model-type" style="flex:1;background:#12122a;color:#e0e0e0;border:1px solid #1a1a4a;padding:4px 6px;font-size:11px;border-radius:4px">
+      <option value="">All Types</option>
+      <option value="image">Image</option>
+      <option value="music">Music</option>
+      <option value="audio">Audio</option>
+    </select>
+  </div>
+  <div style="display:flex;gap:4px;margin-bottom:8px">
+    <input id="model-query" placeholder="Search HF models..." style="flex:1;background:#12122a;color:#e0e0e0;border:1px solid #1a1a4a;padding:4px 6px;font-size:11px;border-radius:4px"/>
+    <button onclick="searchModels()" style="background:#2244aa;color:white;border:none;padding:4px 10px;border-radius:4px;cursor:pointer;font-size:11px">Search</button>
+  </div>
+  <div id="model-list" style="max-height:200px;overflow-y:auto;font-size:11px">
+    <div style="color:#666;padding:8px;text-align:center">Click Search to browse models</div>
+  </div>
+</div>
     <kbd>Esc</kbd> Pause
   </div>
 </div>
@@ -185,6 +203,132 @@ x.onload=function(){
 x.onerror=function(){lp(lt)};
 x.send(JSON.stringify(setupPayload));
 })();
+async function searchModels() {
+    const q = document.getElementById("model-query").value;
+    const t = document.getElementById("model-type").value;
+    const p = new URLSearchParams({query: q, model_type: t, limit: "30"});
+    try {
+        const r = await fetch("/api/models/search?" + p.toString());
+        const d = await r.json();
+        renderModels(d.models || []);
+    } catch(e) {
+        document.getElementById("model-list").innerHTML = '<div style="color:#f44;padding:8px">Error: ' + e + '</div>';
+    }
+}
+function renderModels(ms) {
+    const c = document.getElementById("model-list");
+    if (!ms.length) { c.innerHTML = '<div style="color:#666;padding:8px;text-align:center">No models found</div>'; return; }
+    c.innerHTML = ms.map(m => {
+        const dl = m.status === "downloaded"
+            ? '<button onclick="selectModel(\''+m.type+'\',\''+esc(m.model_id)+'\')" style="background:#2a4;color:#fff;border:none;padding:2px 8px;border-radius:3px;cursor:pointer;font-size:10px">Select</button>'
+            : '<button onclick="downloadModel(\''+esc(m.model_id)+'\')" style="background:#48f;color:#fff;border:none;padding:2px 8px;border-radius:3px;cursor:pointer;font-size:10px">Download</button>';
+        return '<div style="background:#12122a;border:1px solid #1a1a4a;border-radius:4px;padding:6px 8px;margin:4px 0">' +
+            '<div style="display:flex;justify-content:space-between;align-items:center">' +
+            '<strong style="color:#e0e0e0;font-size:11px">' + esc(m.model_id) + '</strong>' + dl + '</div>' +
+            '<div style="color:#888;font-size:10px;margin-top:3px">Type: ' + m.type + ' | DL: ' + (m.downloads||0) +
+            (m.license ? ' | ' + esc(m.license) : '') + ' | ' + m.status + '</div></div>';
+    }).join("");
+}
+async function downloadModel(id) {
+    const r = await fetch("/api/models/download", {method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({model_id:id})});
+    const d = await r.json();
+    alert(d.success ? "Downloading: " + id : "Error: " + (d.error||"unknown"));
+    searchModels();
+}
+async function selectModel(t, id) {
+    const r = await fetch("/api/models/select", {method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({model_type:t,model_id:id})});
+    const d = await r.json();
+    if(d.success) alert("Selected " + id + " for " + t); else alert("Error: " + (d.error||""));
+    searchModels();
+}
+function esc(s) { return (s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/'/g,"&#39;"); }
+setInterval(async function(){
+    try {
+        const r = await fetch("/api/models/downloads");
+        const d = await r.json();
+        (d.downloads||[]).forEach(function(dl){
+            if(dl.status==="downloading"){
+                document.querySelectorAll("#model-list button").forEach(function(b){
+                    if(b.textContent==="Download") b.textContent = dl.progress.toFixed(0)+"%";
+                });
+            }
+        });
+    }catch(e){}
+}, 3000);
 </script>
-</body>
+<script>
+async function searchModels() {
+    const query = document.getElementById("model-query").value;
+    const modelType = document.getElementById("model-type").value;
+    const params = new URLSearchParams({query, model_type: modelType, limit: "30"});
+    try {
+        const r = await fetch("/api/models/search?" + params.toString());
+        const d = await r.json();
+        renderModels(d.models || []);
+    } catch(e) {
+        document.getElementById("model-list").innerHTML = '<div style="color:#ff4444;padding:8px">Error: ' + e + '</div>';
+    }
+}
+function renderModels(models) {
+    const c = document.getElementById("model-list");
+    if (!models.length) {
+        c.innerHTML = '<div style="color:#666;padding:8px;text-align:center">No models found</div>';
+        return;
+    }
+    c.innerHTML = models.map(m => {
+        const isDownloaded = m.status === "downloaded";
+        const btn = isDownloaded
+            ? `<button onclick="selectModel('${m.type}','${m.model_id}')" style="background:#22aa44;color:white;border:none;padding:2px 8px;border-radius:3px;cursor:pointer;font-size:10px">Select</button>`
+            : `<button onclick="downloadModel('${m.model_id}')" style="background:#4488ff;color:white;border:none;padding:2px 8px;border-radius:3px;cursor:pointer;font-size:10px">Download</button>`;
+        const dlBadge = m.downloads > 1000 ? Math.floor(m.downloads/1000)+"k" : (m.downloads || "?");
+        return '<div style="background:#12122a;border:1px solid #1a1a4a;border-radius:4px;padding:6px 8px;margin:4px 0">' +
+            '<div style="display:flex;justify-content:space-between;align-items:center">' +
+            '<strong style="color:#e0e0e0;font-size:11px">' + escapeHtml(m.model_id) + '</strong>' +
+            btn + '</div>' +
+            '<div style="color:#888;font-size:10px;margin-top:3px">' +
+            'Type: ' + m.type + ' | Downloads: ' + dlBadge +
+            (m.license ? ' | License: ' + m.license : '') +
+            ' | Status: ' + m.status +
+            '</div></div>';
+    }).join("");
+}
+async function downloadModel(modelId) {
+    const r = await fetch("/api/models/download", {
+        method:"POST", headers:{"Content-Type":"application/json"},
+        body: JSON.stringify({model_id: modelId})
+    });
+    const d = await r.json();
+    alert(d.success ? "Download started: " + modelId : "Error: " + (d.error || "unknown"));
+    searchModels();
+}
+async function selectModel(type, modelId) {
+    const r = await fetch("/api/models/select", {
+        method:"POST", headers:{"Content-Type":"application/json"},
+        body: JSON.stringify({model_type: type, model_id: modelId})
+    });
+    const d = await r.json();
+    if (d.success) {
+        alert("Selected " + modelId + " for " + type + " generation");
+        searchModels();
+    }
+}
+function escapeHtml(s) {
+    if (!s) return "";
+    return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+}
+// Refresh downloads periodically
+setInterval(async function(){
+    try {
+        const r = await fetch("/api/models/downloads");
+        const d = await r.json();
+        (d.downloads || []).forEach(dl => {
+            if (dl.status === "downloading") {
+                document.querySelectorAll("#model-list div button").forEach(b => {
+                    if (b.textContent === "Download") b.textContent = "..." + dl.progress + "%";
+                });
+            }
+        });
+    } catch(e){}
+}, 3000);
+</script></body>
 </html>

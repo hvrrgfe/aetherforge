@@ -1,4 +1,4 @@
-﻿"""AetherForge Configuration System - manages settings, model paths, backends.
+"""AetherForge Configuration System - manages settings, model paths, backends.
 
 AI-native design: all config is machine-readable JSON/YAML, 
 can be read/written via tools, no manual config file editing needed.
@@ -57,6 +57,43 @@ class MusicGenConfig:
     lazy_load: bool = True
 
 @dataclass
+class AgentConfig:
+    """Configuration for the Agent Runtime / Model Router."""
+    enabled: bool = True
+    endpoint: str = ""
+    api_key: str = ""
+    model_name: str = "gpt-4"
+    max_tokens_per_task: int = 4000
+    default_policy: str = "normal"
+    approval_mode: str = "high_risk"
+
+
+@dataclass
+class NetworkConfig:
+    """Configuration for network source detection and switching."""
+    auto_detect: bool = True
+    timeout: int = 8
+    retries: int = 2
+    preferred_source: str = "auto"
+    sources: list = None
+    proxy: dict = None
+
+    def __post_init__(self):
+        if self.sources is None:
+            self.sources = [
+                {"name": "huggingface", "endpoint": "https://huggingface.co", "enabled": True},
+                {"name": "hf_mirror", "endpoint": "https://hf-mirror.com", "enabled": True},
+            ]
+        if self.proxy is None:
+            self.proxy = {"enabled": False, "http": "", "https": ""}
+
+    def to_dict(self):
+        return {"auto_detect": self.auto_detect, "timeout": self.timeout,
+                "retries": self.retries, "preferred_source": self.preferred_source,
+                "sources": self.sources, "proxy": self.proxy}
+
+
+@dataclass
 class AetherForgeConfig:
     version: str = "2.0.0"
     server_host: str = "127.0.0.1"
@@ -66,6 +103,8 @@ class AetherForgeConfig:
     renderer: RendererConfig = field(default_factory=RendererConfig)
     image_gen: ImageGenConfig = field(default_factory=ImageGenConfig)
     music_gen: MusicGenConfig = field(default_factory=MusicGenConfig)
+    agent: AgentConfig = field(default_factory=AgentConfig)
+    network: NetworkConfig = field(default_factory=NetworkConfig)
 
     def to_dict(self):
         return {
@@ -77,6 +116,7 @@ class AetherForgeConfig:
             "renderer": asdict(self.renderer),
             "image_gen": asdict(self.image_gen),
             "music_gen": asdict(self.music_gen),
+            "agent": asdict(self.agent),
         }
 
 
@@ -100,6 +140,15 @@ def get_config() -> AetherForgeConfig:
                 cfg.renderer = RendererConfig(**data["renderer"])
             if "image_gen" in data:
                 cfg.image_gen = ImageGenConfig(**data["image_gen"])
+            if "agent" in data:
+                cfg.agent = AgentConfig(**data["agent"])
+            if "network" in data:
+                n = data["network"]
+                if n.get("sources"): cfg.network.sources = n["sources"]
+                if n.get("proxy"): cfg.network.proxy = n["proxy"]
+                cfg.network.auto_detect = n.get("auto_detect", True)
+                cfg.network.timeout = n.get("timeout", 8)
+                cfg.network.retries = n.get("retries", 2)
             if "music_gen" in data:
                 cfg.music_gen = MusicGenConfig(**data["music_gen"])
             for k in ["server_host", "server_port", "version"]:

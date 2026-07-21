@@ -16,6 +16,7 @@ from mcp.server import Server
 from mcp.types import Tool, TextContent, CallToolResult, Resource, TextResourceContents
 import mcp.server.stdio
 from aetherforge.config import get_config
+from aetherforge.tools.network import network_manager
 
 # ── Engine reference (set by main()) ──
 _ENGINE = {"world": None, "tools": None, "runtime": None}
@@ -135,7 +136,20 @@ def build_direct_engine(checkpoint_interval=60):
     return wm, eng, rt
 
 
-async def main():
+async def _init_network():
+    """Initialize network detection on startup (non-blocking)."""
+    try:
+        result = network_manager.detect(background=False)
+        if result.get("success"):
+            cur = result.get("current", {})
+            sys.stderr.write(f"[network] Source: {cur.get('name', '?')} ({cur.get('latency_ms', '?')} ms)\n")
+        else:
+            sys.stderr.write("[network] No online source. Offline mode.\n")
+    except Exception:
+        sys.stderr.write("[network] Detection skipped.\n")
+
+
+def main():
     import argparse
     parser = argparse.ArgumentParser(description="AetherForge MCP Server")
     parser.add_argument("--proxy", action="store_true", help="Proxy mode: connect to Flask")
@@ -153,11 +167,11 @@ async def main():
     _ENGINE["world"] = w
     _ENGINE["tools"] = e
     _ENGINE["runtime"] = r
-    print(f"AetherForge MCP Server v{get_config().version} (direct mode)", flush=True)
+    print(f"AetherForge MCP Server v{get_config().version} (direct mode)", file=sys.stderr, flush=True)
     _TOOL_DEF_CACHE[:] = _build_tool_defs(_ENGINE['tools'])
-    print(f"  {len(_TOOL_DEF_CACHE)} tools from engine reflection, no Flask needed", flush=True)
+    print(f"  {len(_TOOL_DEF_CACHE)} tools from engine reflection, no Flask needed", file=sys.stderr, flush=True)
 
-    print("  Waiting for MCP client...", flush=True)
+    print("  Waiting for MCP client...", file=sys.stderr, flush=True)
     async with mcp.server.stdio.stdio_server() as (rs, ws):
         await server.run(
             rs, ws,

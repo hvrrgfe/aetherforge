@@ -67,6 +67,10 @@ class SemanticEntity:
     size: dict = field(default_factory=lambda: {'width': 32.0, 'height': 32.0})
     visual: dict = field(default_factory=dict)
     metadata: dict = field(default_factory=dict)
+    # AI summary fields (WP5)
+    ai_summary: str = ''
+    state_summary: str = ''
+    relations_summary: list = field(default_factory=list)
 
     def to_dict(self):
         return {'entity_id': self.entity_id, 'semantic_type': self.semantic_type,
@@ -75,11 +79,44 @@ class SemanticEntity:
                 'state': self.state, 'relationships': self.relationships,
                 'editable_properties': self.editable_properties, 'tags': self.tags,
                 'position': self.position, 'size': self.size, 'visual': self.visual,
-                'metadata': self.metadata}
+                'metadata': self.metadata,
+                'ai_summary': self.ai_summary, 'state_summary': self.state_summary,
+                'relations_summary': self.relations_summary}
 
     @classmethod
     def from_dict(cls, d):
         return cls(**{k: v for k, v in d.items() if k in cls.__dataclass_fields__})
+
+    def auto_summarize(self) -> None:
+        """Auto-generate AI summary fields from existing data."""
+        parts = []
+        if self.name:
+            parts.append(self.name)
+        if self.semantic_type:
+            parts.append(f"({self.semantic_type})")
+        if self.description:
+            parts.append(f"- {self.description[:100]}")
+        if self.capabilities:
+            parts.append(f"Capabilities: {', '.join(self.capabilities[:5])}")
+        self.ai_summary = ' '.join(parts)
+
+        # State summary
+        if self.state:
+            state_items = [f"{k}={v}" for k, v in list(self.state.items())[:5]]
+            self.state_summary = ', '.join(state_items)
+        else:
+            self.state_summary = 'default state'
+
+        # Relations summary
+        self.relations_summary = []
+        for rel in self.relationships[:10]:
+            if isinstance(rel, dict):
+                t = rel.get('type', 'relates_to')
+                target = rel.get('target_id', rel.get('target', 'unknown'))
+                self.relations_summary.append(f"{t} {target}")
+            elif isinstance(rel, str):
+                self.relations_summary.append(rel)
+
 
 @dataclass
 class Rule:
