@@ -1,0 +1,101 @@
+# === Java ===
+build/
+target/
+*.class
+*.jar
+*.war
+
+# === Python ===
+__pycache__/
+*.py[cod]
+*.pyo
+*.egg-info/
+dist/
+*.egg
+
+# === IDE ===
+.idea/
+*.iml
+.vscode/
+.project
+.classpath
+.settings/
+
+# === OS ===
+Thumbs.db
+.DS_Store
+*.bak
+*.log
+
+# === AetherForge ===
+projects/
+assets/generated/
+models/*.safetensors
+models/*.bin
+models/*.pth
+.aetherforge/
+runtime/
+jre/
+dist*
+*.zip
+*.exe
+
+# === Temp scripts ===
+_gen.py
+gen_*.py
+fix_*.py
+patch_*.py
+check_*.py
+temp_*.py
+temp_*.md
+
+# === Build artifacts ===
+MANIFEST.MF
+AetherForgeStudio-fat.jar
+dist-input/
+dist-new/
+dist-final/
+dist-v2/
+dependency-reduced-pom.xml
+AetherForge.spec
+.mvn/
+mvnw
+mvnw.cmd
+
+# === FlatLaf ===
+flatlaf-*.jar
+META-INF/
+com/formdev/
+# WinUI build artifacts
+AetherForgeStudio-WinUI/bin/
+AetherForgeStudio-WinUI/obj/
+AetherForgeStudio-WinUI/*.user
+AetherForgeStudio-WinUI/LaunchProfile.json
+
+# Standalone EXE at root
+/AetherForgeStudio.exe
+
+# Python cache
+__pycache__/
+*.pyc
+.pytest_cache/
+*.egg-info/
+
+# Temp files
+dist/
+
+# WinUI self-contained deployment
+AetherForgeStudio-WinUI/.winapp/
+
+# WebView2 build artifacts
+AetherForgeStudio-WebView2/bin/
+AetherForgeStudio-WebView2/obj/
+
+# Release artifacts
+release/
+
+
+# Additional temp files
+fix.py\ngen.py\nrun_gen.py\ninspector_original.txt\ntest.txt\ntest_write.txt\nwrite_java_files.py\ncheck_grill.py
+
+# Downloaded Maven deps\ngson-*.jar\njunit-*.jar

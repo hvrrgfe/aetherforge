@@ -1,3 +1,0 @@
-'''
-Game runtime and renderer.
-'''

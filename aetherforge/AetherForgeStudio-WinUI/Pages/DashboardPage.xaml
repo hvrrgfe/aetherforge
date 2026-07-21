@@ -1,0 +1,29 @@
+﻿<Page x:Class="AetherForgeStudio.Pages.DashboardPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <ScrollViewer><StackPanel Padding="16" Spacing="12">
+        <TextBlock Text="世界仪表盘" Style="{StaticResource TitleTextBlockStyle}"/>
+        <Grid ColumnSpacing="12">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition/><ColumnDefinition/><ColumnDefinition/><ColumnDefinition/>
+            </Grid.ColumnDefinitions>
+            <StackPanel Grid.Column="0" BorderBrush="{ThemeResource CardBackgroundFillColorDefault}" BorderThickness="1" CornerRadius="8" Padding="12">
+                <TextBlock Text="实体" FontWeight="Bold"/>
+                <TextBlock x:Name="EntityCount" FontSize="32" Text="0"/>
+            </StackPanel>
+            <StackPanel Grid.Column="1" BorderBrush="{ThemeResource CardBackgroundFillColorDefault}" BorderThickness="1" CornerRadius="8" Padding="12">
+                <TextBlock Text="规则" FontWeight="Bold"/>
+                <TextBlock x:Name="RuleCount" FontSize="32" Text="0"/>
+            </StackPanel>
+            <StackPanel Grid.Column="2" BorderBrush="{ThemeResource CardBackgroundFillColorDefault}" BorderThickness="1" CornerRadius="8" Padding="12">
+                <TextBlock Text="任务" FontWeight="Bold"/>
+                <TextBlock x:Name="QuestCount" FontSize="32" Text="0"/>
+            </StackPanel>
+            <StackPanel Grid.Column="3" BorderBrush="{ThemeResource CardBackgroundFillColorDefault}" BorderThickness="1" CornerRadius="8" Padding="12">
+                <TextBlock Text="版本" FontWeight="Bold"/>
+                <TextBlock x:Name="RevisionCount" FontSize="32" Text="0"/>
+            </StackPanel>
+        </Grid>
+        <Button x:Name="RefreshBtn" Content="刷新" Click="RefreshBtn_Click" HorizontalAlignment="Left"/>
+    </StackPanel></ScrollViewer>
+</Page>

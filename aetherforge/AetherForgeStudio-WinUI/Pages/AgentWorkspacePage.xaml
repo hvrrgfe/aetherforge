@@ -1,0 +1,36 @@
+﻿<Page x:Class="AetherForgeStudio.Pages.AgentWorkspacePage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="using:AetherForgeStudio.Controls">
+    <Grid Padding="16">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+        <StackPanel Grid.Row="0" Orientation="Horizontal" Spacing="8" Margin="0,0,0,12">
+            <TextBox x:Name="GoalInput" PlaceholderText="输入任务目标..." Width="400"/>
+            <Button x:Name="StartTaskBtn" Content="开始任务" Click="StartTaskBtn_Click"/>
+            <Button x:Name="RefreshStatusBtn" Content="刷新状态" Click="RefreshStatusBtn_Click"/>
+        </StackPanel>
+        <Grid Grid.Row="1" ColumnSpacing="12">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="2*"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            <StackPanel Grid.Column="0" Spacing="8">
+                <TextBlock Text="任务进度" Style="{StaticResource TitleTextBlockStyle}"/>
+                <ProgressBar x:Name="TaskProgress"/>
+                <TextBlock x:Name="StatusText" Text="暂无活动任务"/>
+                <TextBlock x:Name="PhaseText"/>
+            </StackPanel>
+            <StackPanel Grid.Column="1" Spacing="8">
+                <TextBlock Text="Agent 状态" Style="{StaticResource TitleTextBlockStyle}"/>
+                <controls:AgentStatusCard x:Name="ExplorerCard" AgentName="探索者"/>
+                <controls:AgentStatusCard x:Name="PlannerCard" AgentName="规划者"/>
+                <controls:AgentStatusCard x:Name="BuilderCard" AgentName="构建者"/>
+                <controls:AgentStatusCard x:Name="VerifierCard" AgentName="验证者"/>
+                <controls:AgentStatusCard x:Name="CriticCard" AgentName="审查者"/>
+            </StackPanel>
+        </Grid>
+    </Grid>
+</Page>
