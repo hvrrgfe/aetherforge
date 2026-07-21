@@ -1,7 +1,0 @@
-<Page x:Class="AetherForgeStudio.Pages.WorldViewerPage"
-    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
-    <Grid>
-        <WebView2 x:Name="WorldView" Source="http://127.0.0.1:7890/viewer-3d"/>
-    </Grid>
-</Page>

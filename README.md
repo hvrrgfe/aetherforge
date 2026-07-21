@@ -1,187 +1,231 @@
-﻿# AetherForge
+# AetherForge
 
-**AI-Native 游戏创作与运行时系统**
+**AI-Native 游戏引擎 — 专为 AI Agent 设计**
 
-| 语言 | 模块 | 功能 | 状态 |
-|------|------|------|------|
-| **Java 21** | `src/com/aetherforge/launcher/` | 统一启动器 (Swing, 组件管理 + 模型下载) | ✅ 新增 |
-| **C# .NET 9** | `AetherForgeStudio-WinUI/` | 桌面客户端 (WinUI 3, MVVM, WebSocket) | ✅ 已编译 EXE |
-| **Python 3.10+** | `aetherforge/` | 核心引擎 (76+ tools, MCP, Agent Runtime) | ✅ 完整 |
-| **Java 21** | `src/com/aetherforge/ui/` | 桌面编辑器 (Swing + FlatLaf) | ✅ 完整 |
+[![GitHub](https://img.shields.io/badge/GitHub-hvrrgfe/aetherforge-181717?logo=github)](https://github.com/hvrrgfe/aetherforge)
+[![Python](https://img.shields.io/badge/Python-3.10%2B-3776AB?logo=python)](https://python.org)
+
+AetherForge 是一个 AI-first 游戏引擎。**AI Agent 是主要用户**，人类只需监督。
+引擎通过 MCP（Model Context Protocol）暴露 104 个工具，AI Agent 可以直接调用创建游戏世界、生成音乐、物理模拟等。
+
+**GitHub**: https://github.com/hvrrgfe/aetherforge
 
 ---
 
 ## 快速开始
 
-### 启动器（推荐）
-
-一键管理所有组件和 AI 模型：
+### 安装
 
 ```powershell
-launcher.bat
+git clone https://github.com/hvrrgfe/aetherforge.git
+cd aetherforge
+install.bat
 ```
 
-启动器包含三个标签页：
-| 标签页 | 功能 |
-|--------|------|
-| **▶ 启动** | 启动/停止 MCP Server、Web UI、Java 编辑器、WinUI 客户端 |
-| **📦 模型管理** | 下载图像/音乐 AI 模型，实时进度追踪 |
-| **⭐ 设置** | Python 路径、模型目录、端口配置 |
-
-### WinUI 桌面客户端
+### 启动 MCP Server
 
 ```powershell
-.\AetherForgeStudio-WinUI\publish\AetherForgeStudio.exe
+python -m aetherforge.mcp_server
 ```
 
-### Python 引擎 / MCP Server
+输出：
 
-```powershell
-python -m aetherforge.mcp_server    # MCP Server (76 tools)
-python -m aetherforge.main          # Web UI (port 7890)
 ```
+AetherForge MCP Server v2.0.0 (direct mode)
+  104 tools from engine reflection
+  Waiting for MCP client...
+```
+
+MCP Server 启动后，AI 客户端（Codex CLI、Claude Desktop、Cursor 等）即可自动发现 104 个工具。
 
 ### 运行测试
 
 ```powershell
-python -m pytest aetherforge/test/ -v   # Python 测试
-mvn test                                # Java 测试
+python -m pytest test/ -v
 ```
-
-### Java 编辑器
-
-```powershell
-build.bat                             # 编译 + 打包
-java -jar AetherForgeStudio-fat.jar   # 启动编辑器
-```
-
-## AI 模型下载器
-
-内置于启动器的「模型管理」标签页，支持从 HuggingFace Hub 下载：
-
-**图像生成模型（6个）**
-
-| 模型 | HuggingFace ID | 参数 | 大小 |
-|------|:-:|:-:|:-:|
-| Anything V5 | stablediffusionapi/anything-v5 | 1.4B | ~2.5 GB |
-| Stable Diffusion 1.5 | runwayml/stable-diffusion-v1-5 | 1.4B | ~2.5 GB |
-| SDXL | stabilityai/stable-diffusion-xl-base-1.0 | 2.6B | ~7 GB |
-| FLUX.1 Schnell | black-forest-labs/FLUX.1-schnell | 3.5B | ~8 GB |
-| FLUX.1 Dev | black-forest-labs/FLUX.1-dev | 12B | ~24 GB |
-
-**音乐/音效生成模型（5个）**
-
-| 模型 | HuggingFace ID | 参数 | 大小 |
-|------|:-:|:-:|:-:|
-| MusicGen Small | facebook/musicgen-small | 300M | ~1.2 GB |
-| MusicGen Medium | facebook/musicgen-medium | 1.5B | ~4 GB |
-| MusicGen Large | facebook/musicgen-large | 3.3B | ~8 GB |
-| MusicGen Melody | facebook/musicgen-melody | 1.5B | ~4 GB |
-| AudioGen | facebook/audiogen-medium | 1.5B | ~4 GB |
-
-下载后自动注册到引擎，可通过 API 激活使用。
 
 ---
 
-## Agent Runtime
+## 给 AI 客户端的 AGENTS.md 配置
 
-多 Agent 协作系统，核心能力：
+在项目根目录的 AGENTS.md 中写入：
 
-| 组件 | 说明 |
+```markdown
+# AetherForge AI Agent 指南
+
+通过 MCP 连接本地引擎，启动方式：python -m aetherforge.mcp_server
+
+暴露 104 个工具：
+
+| 分类 | 工具 |
 |------|------|
-| **Orchestrator** | 任务调度、Agent 生命周期管理 |
-| **Explorer** | 只读探索世界状态，收集 Facts |
-| **Planner** | 基于 Facts 制定可验证计划 |
-| **Builder** | 执行计划、调用引擎工具修改世界 |
-| **Verifier** | 独立验证，重新读取引擎状态 |
-| **Critic** | 对抗性审查，寻找遗漏问题 |
-| **Evidence Store** | 证据链验证，来源不可伪造 |
-| **Commit Gate** | 事务门禁，验证通过才允许提交 |
-| **Token Manager** | Token 预算控制，优雅暂停 |
-| **Model Router** | OpenAI 兼容 API 抽象层 |
-| **Art Director** | 美术风格一致性审查 |
+| 实体 | create_entity, modify_entity, remove_entity, get_entity, find_entities |
+| 世界 | observe, set_weather, set_player, trigger_event |
+| 规则 | create_rule, remove_rule |
+| 任务 | create_quest, complete_quest_step, update_quest_state |
+| 行为 | set_behavior, player_interact |
+| 音乐 | init_music_gen, generate_music, generate_sound_effect, select_music_model |
+| 图像 | init_image_gen, generate_image, generate_texture |
+| 物理 | init_physics, add_physics_body, apply_force, ray_cast |
+| 3D | set_3d_mesh, set_3d_transform, add_3d_light, set_3d_camera |
+| Agent | agent_start_task, agent_get_status, agent_commit, agent_rollback |
+| 模型 | list_all_models, download_selected_model, search_models |
+| 事务 | commit_change, rollback_change, save_project, load_project |
 
-配置模型路径（config.py）：
-
-```python
-model_endpoint = https://api.openai.com/v1
-model_api_key = sk-...
-model_name = gpt-4o
+所有工具返回 JSON。先 observe() 看世界状态，再 create_entity 等工具修改。
 ```
 
-### 风险分级
+---
 
-| 级别 | 参与 Agent | 适用场景 |
-|------|-----------|---------|
-| L0 | Builder -> Check | 低风险操作 |
-| L1 | Planner -> Builder -> Check | 中等复杂度 |
-| L2 | Explorer -> Planner -> Builder -> Verifier -> Commit | 标准任务 |
-| L3 | 全角色 + Human Approval | 高风险变更 |
+## AI Agent 操作示例
 
-## API 路由
+### 创建游戏世界
 
-| 路由 | 说明 |
-|------|------|
-| POST /api/tools/<tool> | 调用引擎工具 |
-| GET /api/tools | 列出所有工具 |
-| GET /api/observe | 获取世界快照 |
-| GET /api/game-state | 游戏状态（前端渲染） |
-| GET /api/models/list | 列出所有可用 AI 模型 |
-| POST /api/models/download | 下载模型 |
-| GET /api/models/downloads | 下载进度 |
-| POST /api/models/select | 激活模型 |
-| DELETE /api/models/delete | 删除模型 |
+注意：以下 JSON 字符串推荐在 AI 客户端中直接自然语言描述，引擎工具会自动解析。
+
+```python
+create_entity(semantic_type="player", name="勇者", description="年轻的冒险者", capabilities=["move","interact"], state={"health":100})
+create_entity(semantic_type="npc", name="铁匠", description="村庄铁匠，可打造武器", capabilities=["talk","trade"], state={"mood":"friendly"})
+create_entity(semantic_type="key_item", name="龙泉剑", description="削铁如泥的宝剑", capabilities=["pick_up","use"], state={"attack":10})
+observe()
+```
+
+### 设置规则和任务
+
+```python
+create_rule(when=["player:near(npc)"], then=["trigger_dialog()"], trigger_type="proximity")
+create_quest("铁匠的委托", "帮铁匠取回工具", [{"step_id":"find_tool", "description":"在矿洞找到工具", "condition":"player.has_item(tool)"}])
+```
+
+### 生成游戏音乐
+
+```python
+init_music_gen()
+select_music_model("musicgen-small")
+generate_music(description="宁静的村庄背景音乐，笛子和吉他", duration=10.0)
+generate_sound_effect(description="宝剑出鞘", duration=2.0)
+play_music(name="bgm", file_path="assets/generated/music_xxx.wav")
+```
+
+### 事务回滚
+
+```python
+modify_entity("ent_player_id", {"state.health": 50})
+rollback_change()
+```
+
+---
+
+## 安装 AI 模型
+
+### 音乐模型（MusicGen-Small）
+
+```powershell
+pip install -r requirements-audiocraft.txt
+python -m aetherforge.cli model download facebook/musicgen-small
+```
+
+或通过 Python：
+
+```python
+from aetherforge.tools.model_manager import model_mgr
+result = model_mgr.download("musicgen-small")
+print(result)
+```
+
+可用音乐模型：
+
+| 模型 | 参数量 | 大小 | 说明 |
+|------|:------:|:----:|------|
+| MusicGen Small | 300M | ~1.2 GB | 快速生成，推荐首选 |
+| MusicGen Medium | 1.5B | ~4 GB | 均衡质量 |
+| MusicGen Large | 3.3B | ~8 GB | 最高质量 |
+| MusicGen Melody | 1.5B | ~4 GB | 旋律引导 |
+| AudioGen | 1.5B | ~4 GB | 音效生成 |
+
+### 图像模型（可选）
+
+```python
+from aetherforge.tools.model_manager import model_mgr
+result = model_mgr.download("anything-v5")
+print(result)
+```
+
+---
+
+## Codex 提示词模板
+
+以下提示词可直接在 Codex CLI 中使用：
+
+### 创建 RPG 村庄
+
+```
+你是 AetherForge 游戏引擎的 AI 操作员。MCP Server 已在本地运行。
+请帮我创建一个武侠小镇：
+1. 创建玩家「剑客」
+2. 创建 NPC「客栈老板」（可对话、可交易）
+3. 创建道具「龙泉剑」（攻击力 +10）
+4. 设置靠近触发对话的规则
+5. 创建任务「寻找失落的宝剑」
+```
+
+### 生成游戏音乐
+
+```
+你现在通过 AetherForge MCP 连接了音乐生成引擎。
+1. 初始化音乐引擎
+2. 选择 musicgen-small 模型
+3. 生成 15 秒战斗背景音乐
+4. 生成 8 秒森林环境音效
+5. 列出所有已生成资产
+```
+
+### 自主开发循环
+
+```
+你正在使用 AetherForge 引擎，通过 MCP 协议操作。
+执行完整的自主开发循环：
+1. 查看当前世界状态（observe）
+2. 创建 3 个有相互关系的实体
+3. 设置 NPC 行走行为
+4. 生成一段游戏音乐
+5. 提交变更
+```
 
 ---
 
 ## 项目结构
 
 ```
-D:\game/
-├── aetherforge/               # Python 核心包
-│   ├── agents/                # Agent Runtime (7 角色)
-│   ├── api/                   # MCP 工具 + Flask 路由
-│   ├── core/                  # 世界模型 + 实体定义
-│   ├── runtime/               # 事务、快照、事件日志、权限
-│   ├── validation/            # 证据链、提交门禁、验证器
-│   ├── tools/                 # 模型管理器、网络检测、安全审查
-│   ├── ai_engines/            # AI 引擎 (图像/音乐生成)
-│   ├── test/                  # Python 测试（117+ 个）
-│   ├── config.py              # 引擎配置
-│   ├── main.py                # Web UI 入口
-│   └── mcp_server.py          # MCP Server
-├── AetherForgeStudio-WinUI/   # WinUI 3 桌面客户端 (.NET 9)
-├── AetherForgeStudio-WebView2/# WebView2 客户端 (.NET 9)
-├── src/                       # Java 代码
-├── docs/                      # 设计文档
-├── test/                      # Java 测试
-├── launcher.bat               # 启动器快捷脚本
-├── build.bat                  # Java 编译脚本
-├── pom.xml                    # Maven 配置
-├── pyproject.toml             # Python 项目配置
-├── setup.py                   # Python 包安装
-├── run_web.py                 # Web 服务器入口
-└── run_tests.bat              # Python 测试
+aetherforge/
++-- agents/           AI Agent 运行时（7 种角色）
+|   +-- roles/        Explorer, Planner, Builder, Verifier, Critic, Art Director
++-- api/              工具层 + MCP Server
+|   +-- engine_v2.py  104 个工具
+|   +-- mcp_server.py MCP 协议入口
++-- core/             世界模型 + 语义实体
++-- runtime/          游戏循环、事务、快照、事件日志
++-- validation/       证据链、提交门禁、检查器
++-- ai_engines/       AI 引擎（图像/音乐生成）
++-- tools/            模型管理器、导出、安全审查
++-- config.py         引擎配置
++-- cli.py            CLI 调试工具
 ```
 
 ---
 
 ## 技术栈
 
-- **Java 21** — 启动器 (Swing + FlatLaf 主题)
-- **C# .NET 9** — WinUI 3 桌面客户端 (Windows App SDK)
-- **Python 3.10+** — Agent Runtime, MCP Server, 世界模型, 验证引擎
-- **协议** — MCP (Model Context Protocol), HTTP REST, WebSocket
-- **AI** — OpenAI 兼容 API (支持 GPT, DeepSeek, Qwen 等)
-- **AI 模型** — HuggingFace Diffusers + AudioCraft (图像/音乐生成)
-- **测试** — pytest (117+ tests) + JUnit 5
+| 语言/工具 | 用途 |
+|-----------|------|
+| Python 3.10+ | 核心引擎、AI Agent、MCP Server |
+| MCP | Model Context Protocol（AI 通信协议） |
+| Diffusers / Audiocraft | AI 图像/音乐生成 |
+| OpenAI 兼容 API | Agent Runtime 的 LLM 后端 |
 
 ---
 
-## 支持项目
+## 链接
 
-如果 AetherForge 对你有帮助，欢迎请我喝杯咖啡 ☕
-
-![收款码](aetherforge/support-qr.png)
-
-你的支持是项目持续发展的动力！
+- GitHub: https://github.com/hvrrgfe/aetherforge
+- Issues: https://github.com/hvrrgfe/aetherforge/issues
