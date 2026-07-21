@@ -1,4 +1,4 @@
-# AetherForge
+﻿# AetherForge
 
 **AI-Native 游戏引擎 — 专为 AI Agent 设计**
 
@@ -229,3 +229,12 @@ aetherforge/
 
 - GitHub: https://github.com/hvrrgfe/aetherforge
 - Issues: https://github.com/hvrrgfe/aetherforge/issues
+
+
+---
+
+## 支持项目
+
+如果 AetherForge 对你有帮助，欢迎请我喝杯咖啡 ☕
+
+![收款码](aetherforge/support-qr.png)
