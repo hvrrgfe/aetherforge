@@ -2,155 +2,113 @@ package com.aetherforge.util;
 
 import com.aetherforge.model.Entity;
 import com.aetherforge.model.Scene;
+import com.google.gson.*;
+import com.google.gson.reflect.TypeToken;
 import java.awt.Color;
+import java.lang.reflect.Type;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
- * 场景序列化/反序列化 — 独立于 Scene 领域模型
- * 当前使用手写 JSON 解析器，后续可替换为 Gson/Jackson
+ * 场景序列化/反序列化 — 基于 Gson，消除手写 JSON 解析器
  */
 public final class SceneSerializer {
     private SceneSerializer() {}
 
+    private static final Gson GSON = new GsonBuilder()
+            .registerTypeAdapter(Color.class, new ColorAdapter())
+            .setPrettyPrinting()
+            .create();
+
+    private static final Type ENTITY_LIST_TYPE = new TypeToken<List<EntityData>>() {}.getType();
+
+    /** 用于 Gson 序列化的中间 DTO，避免污染 Entity 领域模型 */
+    private record SceneData(
+            double cameraX,
+            double cameraY,
+            double cameraZoom,
+            List<EntityData> entities
+    ) {}
+
+    /** 实体 DTO */
+    private record EntityData(
+            String id,
+            String type,
+            String name,
+            double x, double y,
+            double width, double height,
+            String color,
+            boolean isCircle,
+            boolean isPlayer
+    ) {}
+
     public static String toJson(Scene scene) {
-        StringBuilder sb = new StringBuilder();
-        sb.append("{\"cameraX\":").append(scene.getCameraX())
-          .append(",\"cameraY\":").append(scene.getCameraY())
-          .append(",\"cameraZoom\":").append(scene.getCameraZoom())
-          .append(",\"entities\":[");
-        java.util.List<Entity> entities = scene.getEntities();
-        for (int i = 0; i < entities.size(); i++) {
-            if (i > 0) sb.append(",");
-            sb.append(entityToJson(entities.get(i)));
+        List<EntityData> edList = new ArrayList<>();
+        for (Entity e : scene.getEntities()) {
+            edList.add(new EntityData(
+                    e.getId(), e.getType(), e.getName(),
+                    e.getX(), e.getY(), e.getWidth(), e.getHeight(),
+                    String.format("%06x", e.getColor().getRGB() & 0xFFFFFF),
+                    e.isCircle(), e.isPlayer()
+            ));
         }
-        sb.append("]}");
-        return sb.toString();
-    }
-
-    private static String entityToJson(Entity e) {
-        return "{\"id\":\"" + escapeJson(e.getId()) +
-            "\",\"type\":\"" + escapeJson(e.getType()) +
-            "\",\"name\":\"" + escapeJson(e.getName()) +
-            "\",\"x\":" + e.getX() +
-            ",\"y\":" + e.getY() +
-            ",\"width\":" + e.getWidth() +
-            ",\"height\":" + e.getHeight() +
-            ",\"color\":\"" + String.format("%06x", e.getColor().getRGB() & 0xFFFFFF) +
-            "\",\"isCircle\":" + e.isCircle() +
-            ",\"isPlayer\":" + e.isPlayer() +
-            "}";
-    }
-
-                static String escapeJson(String s) {
-        if (s == null) return "";
-        StringBuilder sb = new StringBuilder(s.length() + 16);
-        for (int i = 0; i < s.length(); i++) {
-            char c = s.charAt(i);
-            switch (c) {
-                case '"':  sb.append("\\\""); break;
-                case '\\': sb.append("\\\\"); break;
-                case '\n': sb.append("\\n"); break;
-                case '\r': sb.append("\\r"); break;
-                case '\t': sb.append("\\t"); break;
-                case '\b': sb.append("\\b"); break;
-                case '\f': sb.append("\\f"); break;
-                default:
-                    if (c < 0x20) {
-                        sb.append(String.format("\\u%04x", (int)c));
-                    } else {
-                        sb.append(c);
-                    }
-            }
-        }
-        return sb.toString();
+        SceneData data = new SceneData(
+                scene.getCameraX(), scene.getCameraY(), scene.getCameraZoom(),
+                edList
+        );
+        return GSON.toJson(data);
     }
 
     public static Scene fromJson(String json) {
         Scene scene = new Scene();
         try {
-            int entIdx = json.indexOf("\"entities\":[");
-            if (entIdx < 0) return scene;
-            int arrStart = json.indexOf("[", entIdx);
-            int arrEnd = json.lastIndexOf("]");
-            if (arrStart < 0 || arrEnd < 0) return scene;
+            SceneData data = GSON.fromJson(json, SceneData.class);
+            if (data == null) return scene;
 
-            String arr = json.substring(arrStart + 1, arrEnd);
-            if (arr.trim().isEmpty()) return scene;
+            // 恢复相机
+            scene.resetCamera();
+            scene.setCameraZoom(data.cameraZoom);
+            scene.moveCamera(data.cameraX, data.cameraY);
 
-            extractCamera(json, scene);
-            parseEntities(arr, scene);
-        } catch (Exception e) {
+            // 恢复实体
+            if (data.entities != null) {
+                for (EntityData ed : data.entities) {
+                    Entity entity = new Entity(ed.type, ed.name);
+                    entity.setId(ed.id);
+                    entity.setX(ed.x);
+                    entity.setY(ed.y);
+                    entity.setWidth(ed.width);
+                    entity.setHeight(ed.height);
+                    if (ed.color != null && !ed.color.isEmpty()) {
+                        try {
+                            entity.setColor(Color.decode("#" + ed.color));
+                        } catch (Exception ignored) {}
+                    }
+                    entity.setCircle(ed.isCircle);
+                    entity.setPlayer(ed.isPlayer);
+                    scene.addEntity(entity);
+                }
+            }
+        } catch (JsonSyntaxException e) {
             System.err.println("[SceneSerializer] JSON parse error: " + e.getMessage());
         }
         return scene;
     }
 
-    private static void extractCamera(String json, Scene scene) {
-        scene.moveCamera(extractDouble(json, "\"cameraX\":"), extractDouble(json, "\"cameraY\":"));
-        double zoom = extractDouble(json, "\"cameraZoom\":");
-        if (zoom > 0) { scene.resetCamera(); scene.zoomCamera(zoom); }
-    }
+    /** Color 序列化适配器 */
+    private static class ColorAdapter implements JsonSerializer<Color>, JsonDeserializer<Color> {
+        @Override
+        public JsonElement serialize(Color src, Type typeOfSrc, JsonSerializationContext context) {
+            return new JsonPrimitive(String.format("#%06x", src.getRGB() & 0xFFFFFF));
+        }
 
-    private static void parseEntities(String arr, Scene scene) {
-        int depth = 0, start = 0;
-        for (int i = 0; i < arr.length(); i++) {
-            char c = arr.charAt(i);
-            if (c == '{') { if (depth++ == 0) start = i; }
-            else if (c == '}') {
-                if (--depth == 0) {
-                    Entity e = parseEntity(arr.substring(start, i + 1));
-                    if (e != null) scene.addEntity(e);
-                }
+        @Override
+        public Color deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
+            try {
+                return Color.decode(json.getAsString());
+            } catch (Exception e) {
+                return Color.GRAY;
             }
         }
-    }
-
-    private static double extractDouble(String json, String key) {
-        int idx = json.indexOf(key);
-        if (idx < 0) return 0;
-        idx += key.length();
-        int end = json.indexOf(",", idx);
-        if (end < 0) end = json.indexOf("}", idx);
-        if (end < 0) return 0;
-        try { return Double.parseDouble(json.substring(idx, end).trim()); }
-        catch (NumberFormatException e) { return 0; }
-    }
-
-    private static Entity parseEntity(String obj) {
-        try {
-            String id = extractString(obj, "\"id\"");
-            String type = extractString(obj, "\"type\"");
-            String name = extractString(obj, "\"name\"");
-            double x = extractDouble(obj, "\"x\":");
-            double y = extractDouble(obj, "\"y\":");
-            double w = extractDouble(obj, "\"width\":");
-            double h = extractDouble(obj, "\"height\":");
-            String colorStr = extractString(obj, "\"color\"");
-            boolean isCircle = obj.contains("\"isCircle\":true");
-            boolean isPlayer = obj.contains("\"isPlayer\":true");
-
-            Entity entity = new Entity(type, name);
-            if (!id.isEmpty()) entity.setId(id);
-            entity.setX(x); entity.setY(y);
-            entity.setWidth(w); entity.setHeight(h);
-            if (!colorStr.isEmpty()) {
-                try { entity.setColor(Color.decode("#" + colorStr)); }
-                catch (Exception ignored) {}
-            }
-            entity.setCircle(isCircle);
-            entity.setPlayer(isPlayer);
-            return entity;
-        } catch (Exception e) {
-            System.err.println("[SceneSerializer] Entity parse error: " + e.getMessage());
-            return null;
-        }
-    }
-
-    private static String extractString(String json, String key) {
-        int idx = json.indexOf(key + "\":\"");
-        if (idx < 0) return "";
-        idx += key.length() + 3;
-        int end = json.indexOf("\"", idx);
-        if (end < 0) return "";
-        return json.substring(idx, end);
     }
 }

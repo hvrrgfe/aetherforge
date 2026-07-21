@@ -74,7 +74,9 @@ public final class I18n {
         put("log.undo",          "撤销",                          "Undo");
         put("log.redo",          "重做",                          "Redo");
         put("log.saved",         "已保存",                          "Scene saved");
-        put("log.loaded2",       "已加载",                          "Scene loaded");
+
+        put("log.moved",         "移动实体",                       "Moved entity");
+        put("log.sized",         "缩放实体",                       "Resized entity");        put("log.loaded2",       "已加载",                          "Scene loaded");
     }
 
     private static void put(String key, String zh, String en) {

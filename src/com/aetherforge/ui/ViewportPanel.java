@@ -11,8 +11,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * 2D viewport 依赖 Scene 而非 MainWindow
- * 通过 SceneListener 监听变更，不直接持有窗口引用
+ * 2D viewport 渚濊禆 Scene 鑰岄潪 MainWindow
+ * 閫氳繃 SceneListener 鐩戝惉鍙樻洿锛屼笉鐩存帴鎸佹湁绐楀彛寮曠敤
  */
 public class ViewportPanel extends JPanel implements SceneListener {
 
@@ -33,6 +33,9 @@ public class ViewportPanel extends JPanel implements SceneListener {
     public void setToolMode(ToolMode mode) { this.toolMode = mode; }
     public ToolMode getToolMode() { return toolMode; }
     private boolean snapEnabled = true;
+    private boolean dirtyDrag;
+    private double dragStartX, dragStartY;
+    private JPopupMenu vpPopup;
     private Timer animTimer;
 
     public ViewportPanel(Scene scene) {
@@ -60,30 +63,7 @@ public class ViewportPanel extends JPanel implements SceneListener {
 
         scene.addListener(this);
 
-        JPopupMenu vpPopup = new JPopupMenu();
-        vpPopup.setBackground(Colors.bgRaised());
-        vpPopup.setBorder(BorderFactory.createLineBorder(Colors.borderLine()));
-        JMenuItem createItem = new JMenuItem();
-        createItem.setForeground(Colors.textPrimary());
-        createItem.setBackground(Colors.bgRaised());
-        createItem.addActionListener(e -> {
-            scene.executeCommand(new com.aetherforge.model.CreateEntityCommand(scene, "entity", com.aetherforge.util.I18n.get("entity.new")));
-        });
-        vpPopup.add(createItem);
-        JMenuItem delItem = new JMenuItem();
-        delItem.setForeground(Colors.textPrimary());
-        delItem.setBackground(Colors.bgRaised());
-        delItem.addActionListener(e -> {
-            if (scene.getSelectedEntity() != null)
-                scene.executeCommand(new com.aetherforge.model.DeleteEntityCommand(scene, scene.getSelectedEntity()));
-        });
-        vpPopup.add(delItem);
-        vpPopup.addSeparator();
-        JMenuItem snapItem = new JMenuItem();
-        snapItem.setForeground(Colors.textPrimary());
-        snapItem.setBackground(Colors.bgRaised());
-        snapItem.addActionListener(e -> { snapEnabled = !snapEnabled; repaint(); });
-        vpPopup.add(snapItem);
+        vpPopup = buildPopup();
 
     }
 
@@ -273,6 +253,34 @@ public class ViewportPanel extends JPanel implements SceneListener {
         g2.fillRect(w - 55, h - 28, fill, 3);
     }
 
+
+    private JPopupMenu buildPopup() {
+        JPopupMenu popup = new JPopupMenu();
+        popup.setBackground(Colors.bgRaised());
+        popup.setBorder(BorderFactory.createLineBorder(Colors.borderLine()));
+        JMenuItem createItem = new JMenuItem("+ " + com.aetherforge.util.I18n.get("tree.new"));
+        createItem.setForeground(Colors.textPrimary());
+        createItem.setBackground(Colors.bgRaised());
+        createItem.addActionListener(e -> {
+            scene.executeCommand(new com.aetherforge.model.CreateEntityCommand(scene, "entity", com.aetherforge.util.I18n.get("entity.new")));
+        });
+        popup.add(createItem);
+        JMenuItem delItem = new JMenuItem(com.aetherforge.util.I18n.get("tree.delete"));
+        delItem.setForeground(Colors.textPrimary());
+        delItem.setBackground(Colors.bgRaised());
+        delItem.addActionListener(e -> {
+            if (scene.getSelectedEntity() != null)
+                scene.executeCommand(new com.aetherforge.model.DeleteEntityCommand(scene, scene.getSelectedEntity()));
+        });
+        popup.add(delItem);
+        popup.addSeparator();
+        JMenuItem snapItem = new JMenuItem((snapEnabled ? "Disable " : "Enable ") + "Snap");
+        snapItem.setForeground(Colors.textPrimary());
+        snapItem.setBackground(Colors.bgRaised());
+        snapItem.addActionListener(e -> { snapEnabled = !snapEnabled; repaint(); });
+        popup.add(snapItem);
+        return popup;
+    }
     private class ViewportMouseHandler extends MouseAdapter {
         @Override
         public void mousePressed(MouseEvent e) {
@@ -291,6 +299,8 @@ public class ViewportPanel extends JPanel implements SceneListener {
                 scene.setSelectedEntity(hit);
                 dragEntity = hit; isDragging = true;
                 dragOffsetX = e.getX(); dragOffsetY = e.getY();
+                dragStartX = hit.getX(); dragStartY = hit.getY();
+                dirtyDrag = false;
             } else {
                 scene.clearSelection();
                 isDragging = true; dragStart = e.getPoint();
@@ -303,6 +313,7 @@ public class ViewportPanel extends JPanel implements SceneListener {
             if (dragEntity != null) {
                 double rawDx = (e.getX() - dragOffsetX) / scene.getCameraZoom();
                 double rawDy = (e.getY() - dragOffsetY) / scene.getCameraZoom();
+                dirtyDrag = true;
                 if (snapEnabled) {
                     double newX = Math.round((dragEntity.getX() + rawDx) / 32) * 32;
                     double newY = Math.round((dragEntity.getY() + rawDy) / 32) * 32;
@@ -319,6 +330,13 @@ public class ViewportPanel extends JPanel implements SceneListener {
         }
         @Override
         public void mouseReleased(MouseEvent e) {
+            if (dragEntity != null && dirtyDrag) {
+                double newX = dragEntity.getX(), newY = dragEntity.getY();
+                if (Math.abs(newX - dragStartX) > 0.01 || Math.abs(newY - dragStartY) > 0.01) {
+                    scene.executeCommand(new com.aetherforge.model.MoveEntityCommand(
+                        scene, dragEntity, dragStartX, dragStartY, newX, newY));
+                }
+            }
             isDragging = false; dragEntity = null; dragStart = null;
             if (e.isPopupTrigger()) showPopup(e);
         }
@@ -366,3 +384,4 @@ public class ViewportPanel extends JPanel implements SceneListener {
         }
     }
 }
+
