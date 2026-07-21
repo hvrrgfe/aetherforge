@@ -1,4 +1,4 @@
-'''
+﻿'''
 AetherForge Main Entry - Integrated game server with runtime.
 '''
 import sys, os, json, threading, time
@@ -24,7 +24,20 @@ class AetherForgeServer:
     def _make_app(self):
         static_dir = os.path.join(HERE, "static")
         app = Flask(__name__, static_folder=static_dir, static_url_path="")
-        app.config["SECRET_KEY"] = os.environ.get("AETHERFORGE_SECRET_KEY", "dev-secret-change-in-production")
+        import secrets; app.config['SECRET_KEY'] = os.environ.get('AETHERFORGE_SECRET_KEY', secrets.token_hex(32))
+        # External API token auth (auto-enabled when binding to 0.0.0.0)
+        _API_TOKEN = os.environ.get('AETHERFORGE_API_TOKEN', secrets.token_hex(16) if self.host == '0.0.0.0' else None)
+        if _API_TOKEN:
+            print(f'  [SECURITY] API token auth enabled: Bearer {_API_TOKEN}', flush=True)
+
+        def _check_auth():
+            if _API_TOKEN is None:
+                return None  # localhost only, no auth needed
+            auth = request.headers.get('Authorization', '')
+            if auth == f'Bearer {_API_TOKEN}':
+                return None
+            return jsonify(ToolResult(False, error='Unauthorized: provide Authorization: Bearer <token>').to_dict()), 401
+
         tools, runtime = self.tools, self.runtime
 
         def call_fn(tool_name, data):
@@ -33,7 +46,12 @@ class AetherForgeServer:
             fn = getattr(tools, tool_name, None)
             if fn:
                 return fn(**data)
-            if tool_name == "tick":
+            if tool_name in ('save_project', 'load_project'):
+                from aetherforge.tools import validate_project_path as _vpp
+                ok, err = _vpp(data.get('path', ''))
+                if not ok:
+                    return ToolResult(False, error=err)
+            if tool_name == 'tick':
                 runtime.tick(data.get("dt", 1.0/60.0))
                 return ToolResult(True, {"tick": self.world.tick})
             if tool_name == "set_player_input":
@@ -81,6 +99,14 @@ class AetherForgeServer:
                 "game_time": self.world.game_time, "entities": entities,
                 "player_entity_id": self.world.player_entity_id,
             }
+
+
+
+        @app.before_request
+        def check_api_auth():
+            if _API_TOKEN and request.path.startswith('/api/'):
+                return _check_auth()
+            return None
 
         @app.after_request
         def add_security_headers(response):
@@ -202,11 +228,17 @@ def main():
     ap = argparse.ArgumentParser(description="AetherForge")
     ap.add_argument("--demo", action="store_true", help="Load rainy station demo")
     ap.add_argument("--demo-3d", action="store_true", help="Load 3D rainy station demo")
-    ap.add_argument("--host", default="127.0.0.1", help="Server host")
+    ap.add_argument("--host", default="127.0.0.1", help="Server host (use --allow-external for 0.0.0.0)")
+    ap.add_argument("--allow-external", action="store_true", help="Allow binding to 0.0.0.0 (WARNING: no auth)")
     ap.add_argument("--port", type=int, default=7890, help="Server port")
     ap.add_argument("--project", type=str, help="Load project file")
     args = ap.parse_args()
 
+    if args.host in ("0.0.0.0", "::") and not args.allow_external:
+        print("  [SECURITY] ERROR: Refusing to bind to %s (use --allow-external to override)" % args.host, flush=True)
+        print("  [SECURITY] The API has NO authentication. Anyone on your network can control your game world.", flush=True)
+        print("  [SECURITY] Run with: python -m aetherforge.main --allow-external --host 0.0.0.0", flush=True)
+        sys.exit(1)
     srv = AetherForgeServer(host=args.host, port=args.port)
 
     if args.demo:
@@ -223,3 +255,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+

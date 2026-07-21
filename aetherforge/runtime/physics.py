@@ -4,7 +4,6 @@ Supports: rigid bodies, collisions, gravity, forces, joints.
 All physics objects are linked to world entities by entity_id.
 """
 import math, sys
-sys.path.insert(0, ".")
 from aetherforge.config import get_config
 
 class PhysicsEngine:

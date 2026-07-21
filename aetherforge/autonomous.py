@@ -4,7 +4,6 @@ read -> plan -> create -> run -> observe -> test -> fix -> commit
 Smart recovery: if a step fails, rollback and try alternatives.
 """
 import sys, os, time
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from aetherforge.core.world_model import WorldModel
 from aetherforge.api.tools import EngineTools, ToolResult
 from aetherforge.runtime.game_loop import GameRuntime

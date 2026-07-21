@@ -49,3 +49,30 @@ tools/write_all.py
 tools/writer.py
 temp_*.py
 temp_*.md
+
+# Build artifacts
+*.jar
+*.zip
+*.class
+MANIFEST.MF
+dependency-reduced-pom.xml
+AetherForge.spec
+
+# Distribution output
+dist-final/
+dist-input/
+dist-new/
+dist-v2/
+target/
+
+# Temp scripts
+_fix*.py
+fix_ux.py
+fix_*.py
+logs.zip
+
+
+# Temp scripts
+_verify_*.py
+_fix_indent.py
+

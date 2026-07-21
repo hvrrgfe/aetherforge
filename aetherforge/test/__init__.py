@@ -1,8 +1,10 @@
-import sys, os
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from aetherforge.api.tools import ToolResult
+﻿"""AetherForge test suite.
 
-def run_tests(engine, runtime=None):
-  from aetherforge.test.test_runner import TestRunner
-  tr = TestRunner(engine, runtime)
-  return tr.run_all()
+Quick start:
+    from aetherforge.test import run_tests
+    results = run_tests(engine, runtime)
+
+CLI:
+    python -m aetherforge.test.test_runner
+"""
+from aetherforge.test.test_runner import run_tests

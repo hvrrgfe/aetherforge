@@ -4,7 +4,6 @@ Designed for Three.js rendering in the browser.
 Python side manages scene graph and sends state to browser via REST API.
 """
 import json, math, sys
-sys.path.insert(0, ".")
 from dataclasses import dataclass, field, asdict
 from typing import Optional
 

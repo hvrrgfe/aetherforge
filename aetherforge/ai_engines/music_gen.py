@@ -12,7 +12,6 @@ User can:
 """
 import os, sys, json, base64, io, threading, time
 from pathlib import Path
-sys.path.insert(0, ".")
 from aetherforge.config import get_config, validate_torch
 
 KNOWN_MUSIC_MODELS = {
@@ -108,7 +107,7 @@ class MusicGenEngine:
         self._current_model_name = name_or_path
         self._resolved_path = resolved
         self._loaded = False
-        return True
+        return {"success": True, "model": name_or_path, "path": resolved, "loaded": False}
 
     def init(self, force=False):
         """Non-blocking init. Only checks torch, no network."""
@@ -186,3 +185,4 @@ class MusicGenEngine:
                               for k, v in models.items()},
             "generated_count": len(self._generated),
         }
+

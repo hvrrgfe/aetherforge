@@ -1,4 +1,4 @@
-'''
+﻿'''
 AetherForge - AI-Native Game Creation and Runtime System
 '''
 from __future__ import annotations

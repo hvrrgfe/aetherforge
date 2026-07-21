@@ -6,7 +6,6 @@ from __future__ import annotations
 import sys
 import json
 import argparse
-sys.path.insert(0, ".")
 
 from aetherforge.core.world_model import WorldModel
 from aetherforge.api.engine_v2 import EngineToolsV2 as EngineTools
@@ -15,7 +14,8 @@ from aetherforge.api.engine_v2 import EngineToolsV2 as EngineTools
 def main():
     parser = argparse.ArgumentParser(description="AetherForge - AI-Native Game Engine")
     parser.add_argument("--server", action="store_true", help="Start the API server")
-    parser.add_argument("--host", default="127.0.0.1", help="Server host")
+    parser.add_argument("--host", default="127.0.0.1", help="Server host (use --allow-external for 0.0.0.0)")
+    parser.add_argument("--allow-external", action="store_true", help="Allow binding to 0.0.0.0 (WARNING: no auth)")
     parser.add_argument("--port", type=int, default=7890, help="Server port")
     parser.add_argument("--demo", action="store_true", help="Load the rainy station demo")
     parser.add_argument("--project", type=str, help="Load a project file")
@@ -62,6 +62,9 @@ def main():
 
     # Start server
     if args.server:
+        if args.host in ("0.0.0.0", "::") and not args.allow_external:
+            print("[SECURITY] Refusing to bind to %s. Use --allow-external to override." % args.host)
+            sys.exit(1)
         from aetherforge.api.server import run_server
         run_server(host=args.host, port=args.port)
         return
@@ -84,6 +87,10 @@ def main():
             break
         if line == "help":
             print("  tool <name> [json_params]  - Call a tool")
+            print("  models                   - List all available models")
+            print("  download <model>         - Download a model (background)")
+            print("  delete <model>           - Delete a downloaded model")
+            print("  dl-status                - Check download progress")
             print("  observe                   - Print world snapshot")
             print("  summary                   - Print world summary")
             print("  save <path>               - Save project")
@@ -106,6 +113,28 @@ def main():
         elif cmd == "load" and len(parts) >= 2:
             tools.load_project(parts[1])
             print(f"Loaded from {parts[1]}")
+        elif cmd == "models":
+            from aetherforge.tools.model_manager import model_mgr
+            models = model_mgr.list_models()
+            print("%-20s %-12s %-10s %s" % ("Name", "Type", "Status", "Description"))
+            print("-" * 80)
+            for m in models:
+                print("%-20s %-12s %-10s %s" % (m["name"], m["model_type"], m["status"], m["desc"][:35]))
+        elif cmd == "download" and len(parts) >= 2:
+            from aetherforge.tools.model_manager import model_mgr
+            r = model_mgr.download(parts[1])
+            print(r.get("message", str(r)))
+        elif cmd == "delete" and len(parts) >= 2:
+            from aetherforge.tools.model_manager import model_mgr
+            r = model_mgr.delete_model(parts[1])
+            print(r.get("message", str(r)))
+        elif cmd == "dl-status":
+            from aetherforge.tools.model_manager import model_mgr
+            dl = model_mgr.download_progress()
+            if not dl:
+                print("No active downloads")
+            for d in dl:
+                print("%s: %.1f%% (%s)" % (d["name"], d["progress"], d["status"]))
         elif cmd == "server":
             from aetherforge.api.server import run_server
             run_server()

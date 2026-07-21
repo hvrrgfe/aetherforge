@@ -12,7 +12,6 @@ User can:
 """
 import os, sys, json, base64, io, threading, time
 from pathlib import Path
-sys.path.insert(0, ".")
 from aetherforge.config import get_config, validate_torch
 
 KNOWN_IMAGE_MODELS = {
@@ -61,8 +60,7 @@ def scan_local_models(search_paths=None):
             Path(".") / "models",
             Path.home() / ".cache" / "huggingface" / "hub",
             Path.home() / "models",
-            Path("D:/models"),
-            Path("E:/models"),
+            Path.home() / "models",
         ]
         cfg = get_config().image_gen
         if cfg.model_path:
@@ -261,3 +259,4 @@ class ImageGenEngine:
             "generated_count": len(self._generated),
             "output_dir": str(self._output_dir),
         }
+

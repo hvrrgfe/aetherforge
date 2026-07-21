@@ -1,9 +1,9 @@
-﻿# AetherForge 核心依赖
-pymunk>=6.5.0
-pygame>=2.0.0
-flask>=2.0.0
-mcp>=1.0.0
-psutil>=5.0.0
+# AetherForge 核心依赖（锁定版本 -> 可复现构建）
+pymunk==7.3.0          # 物理引擎
+pygame==2.6.1          # 音频引擎
+flask==3.1.3           # REST API Server
+mcp==1.28.1            # MCP 协议
+psutil==7.2.2           # 系统监控
 
 # AI 图片生成（可选）
 # torch
@@ -12,3 +12,4 @@ psutil>=5.0.0
 # accelerate
 
 # AI 音乐生成（可选，见 README 中 "AI 音乐生成" 章节）
+# audiocraft

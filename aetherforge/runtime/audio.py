@@ -5,7 +5,6 @@ spatial audio (pan), crossfade transitions.
 AI-natively controlled via semantic events, not file paths.
 """
 import os, sys, math, threading, time
-sys.path.insert(0, ".")
 from pathlib import Path
 from aetherforge.config import get_config
 

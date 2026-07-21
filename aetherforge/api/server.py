@@ -1,6 +1,5 @@
 ﻿"""AetherForge API Server - Flask-based REST API for AI control."""
 import sys, os, json
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from flask import Flask, request, jsonify, send_from_directory
 from aetherforge.core.world_model import WorldModel
 from aetherforge.api.tools import EngineTools, ToolResult
@@ -29,6 +28,12 @@ def create_server(world=None):
             return jsonify(ToolResult(False, error=f"Unknown tool: {tool_name}").to_dict()), 404
         try:
             data = request.get_json(silent=True) or {}
+            # Path traversal guard (defense in depth)
+            if tool_name in ('save_project', 'load_project'):
+                from aetherforge.tools import validate_project_path as _vpp
+                ok, err = _vpp(data.get('path', ''))
+                if not ok:
+                    return jsonify(ToolResult(False, error=err).to_dict()), 403
             result = fn(**data)
             return jsonify(result.to_dict())
         except Exception as ex:

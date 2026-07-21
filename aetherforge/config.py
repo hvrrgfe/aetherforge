@@ -1,4 +1,4 @@
-"""AetherForge Configuration System - manages settings, model paths, backends.
+﻿"""AetherForge Configuration System - manages settings, model paths, backends.
 
 AI-native design: all config is machine-readable JSON/YAML, 
 can be read/written via tools, no manual config file editing needed.
@@ -11,7 +11,7 @@ from typing import Optional
 CONFIG_DIR = Path(os.environ.get("AETHERFORGE_HOME", str(Path.home() / ".aetherforge")))
 CONFIG_FILE = CONFIG_DIR / "config.yaml"
 PROJECTS_DIR = Path(__file__).parent / "projects"
-MODELS_DIR = Path(__file__).parent / "models"
+MODELS_DIR = CONFIG_DIR / "models"
 
 @dataclass
 class PhysicsConfig:
@@ -37,7 +37,6 @@ class RendererConfig:
     fov: float = 60.0
     background_color: str = "#1a1a22"
 
-@dataclass
 @dataclass
 class ImageGenConfig:
     enabled: bool = True
@@ -142,3 +141,4 @@ def find_model(path_hint: str = "") -> str:
         if p.exists() and list(p.glob("*.safetensors")):
             return str(p)
     return ""
+

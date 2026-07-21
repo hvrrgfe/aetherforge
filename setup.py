@@ -1,8 +1,4 @@
-"""AetherForge - AI-Native Game Creation & Runtime System
-
-AI Agent is the primary user; humans are supervisors.
-All tools accessible via MCP Server, CLI, and REST API.
-"""
+"""AetherForge - AI-Native Game Creation & Runtime System"""
 from setuptools import setup, find_packages
 
 with open("README.md", "r", encoding="utf-8") as f:
@@ -15,7 +11,7 @@ setup(
     long_description=long_description,
     long_description_content_type="text/markdown",
     author="AetherForge Team",
-    packages=find_packages(),
+    packages=find_packages(include=["aetherforge", "aetherforge.*"]),
     include_package_data=True,
     python_requires=">=3.10",
     install_requires=[
@@ -28,9 +24,8 @@ setup(
     extras_require={
         "physics": ["pymunk>=7.0"],
         "audio": ["pygame>=2.5"],
-        "3d": [],  # Three.js via browser, no Python dep needed
         "image-gen": ["torch>=2.0", "diffusers>=0.24", "transformers>=4.36"],
-        "music-gen": ["torch>=2.0", "audiocraft @ git+https://github.com/facebookresearch/audiocraft.git"],
+        "music-gen": ["torch>=2.0"],
         "full": [
             "pymunk>=7.0",
             "pygame>=2.5",

@@ -1,4 +1,4 @@
-<p align="center">
+﻿<p align="center">
   <img src="https://img.shields.io/badge/Python-3.10+-blue?style=flat&logo=python" alt="Python">
   <img src="https://img.shields.io/badge/MCP-Enabled-FF6B35?style=flat" alt="MCP">
   <img src="https://img.shields.io/badge/3D-Three.js-green?style=flat&logo=three.js" alt="3D">
@@ -13,7 +13,7 @@
 <h1 align="center">⚡ AetherForge</h1>
 <p align="center"><strong>给 AI 用的游戏引擎，人看着就行</strong></p>
 <p align="center">
-  Codex、Claude 这类 AI 通过 <b>MCP 协议</b>直接调 53 个工具<br>
+  Codex、Claude 这类 AI 通过 <b>MCP 协议</b>直接调 54 个工具<br>
   搭场景 · 写规则 · 上物理 · 播音频 · 3D 渲染 · AI 画图作曲
 </p>
 

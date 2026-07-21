@@ -1,0 +1,42 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "aetherforge"
+version = "2.0.0"
+description = "AI-Native Game Creation & Runtime System"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [
+    { name = "AetherForge Team" },
+]
+
+dependencies = [
+    "flask>=3.0",
+    "mcp>=1.0",
+    "pyyaml>=6.0",
+    "Pillow>=10.0",
+    "numpy>=1.24",
+]
+
+[project.optional-dependencies]
+physics = ["pymunk>=7.0"]
+audio = ["pygame>=2.5"]
+image-gen = ["torch>=2.0", "diffusers>=0.24", "transformers>=4.36"]
+music-gen = ["torch>=2.0"]
+full = [
+    "pymunk>=7.0",
+    "pygame>=2.5",
+    "torch>=2.0",
+    "diffusers>=0.24",
+    "transformers>=4.36",
+]
+dev = ["pytest>=7.0"]
+
+[project.scripts]
+aetherforge = "aetherforge.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["aetherforge*"]

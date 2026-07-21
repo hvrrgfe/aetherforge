@@ -3,7 +3,6 @@
 AI-native: all setup done via tools, no file editing.
 """
 import sys, os
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from aetherforge.api.engine_v2 import EngineToolsV2
 
 
